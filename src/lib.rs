@@ -1,8 +1,8 @@
 use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
 use calimero_sdk::{
     app,
-    borsh::{BorshDeserialize, BorshSerialize},
-    env,
+    borsh::{BorshDeserialize, BorshSerialize}
 };
 
 #[app::event]
@@ -14,20 +14,20 @@ pub enum Event {
     OwnerCreated { owner_id: String },
 }
 
-#[derive(Default, BorshDeserialize, BorshSerialize)]
+#[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 pub struct User {
     user_id: String,
     name: String,
     driving_license: String,
 }
 
-#[derive(Default, BorshDeserialize, BorshSerialize)]
+#[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 pub struct Owner {
     owner_id: String,
     name: String,
 }
 
-#[derive(Default, BorshDeserialize, BorshSerialize)]
+#[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
 pub struct Car {
     car_id: String,
     owner_id: String,
@@ -115,18 +115,18 @@ impl CarSharing {
         self.cars.keys().cloned().collect()
     }
 
-    pub fn get_car_info(&self, car_id: &String) -> Option<&Car> {
-        self.cars.get(car_id)
+    pub fn get_car_info(&self, car_id: String) -> Option<&Car> {
+        self.cars.get(&car_id)
     }
 
-    pub fn check_car_availability(&self, car_id: &String) -> Result<bool, Error> {
-        self.cars.get(car_id)
+    pub fn check_car_availability(&self, car_id: String) -> Result<bool, Error> {
+        self.cars.get(&car_id)
             .map(|car| car.available)
             .ok_or(Error::CarNotFound)
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Error {
     InvalidProof,
     UserAlreadyExists,
