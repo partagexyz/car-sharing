@@ -1,0 +1,10 @@
+/Users/juliencarbonnell/near/car-sharing/car-sharing-backend/target/wasm32-unknown-unknown/app-release/deps/libbs58-0cde14519a812eb2.rmeta: /Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bs58-0.5.1/src/lib.rs /Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bs58-0.5.1/src/alphabet.rs /Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bs58-0.5.1/src/decode.rs /Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bs58-0.5.1/src/encode.rs
+
+/Users/juliencarbonnell/near/car-sharing/car-sharing-backend/target/wasm32-unknown-unknown/app-release/deps/libbs58-0cde14519a812eb2.rlib: /Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bs58-0.5.1/src/lib.rs /Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bs58-0.5.1/src/alphabet.rs /Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bs58-0.5.1/src/decode.rs /Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bs58-0.5.1/src/encode.rs
+
+/Users/juliencarbonnell/near/car-sharing/car-sharing-backend/target/wasm32-unknown-unknown/app-release/deps/bs58-0cde14519a812eb2.d: /Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bs58-0.5.1/src/lib.rs /Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bs58-0.5.1/src/alphabet.rs /Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bs58-0.5.1/src/decode.rs /Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bs58-0.5.1/src/encode.rs
+
+/Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bs58-0.5.1/src/lib.rs:
+/Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bs58-0.5.1/src/alphabet.rs:
+/Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bs58-0.5.1/src/decode.rs:
+/Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bs58-0.5.1/src/encode.rs:
