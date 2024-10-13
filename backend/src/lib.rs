@@ -2,14 +2,14 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use calimero_sdk::{
     app, 
-    borsh::{BorshDeserialize, BorshSerialize}
-    env,
+    borsh::{BorshDeserialize, BorshSerialize},
+    //env
 };
 
-// use near_sdk::env;
+//use near_sdk::env;
 use near_sdk::AccountId;
 use near_sdk::env::predecessor_account_id;
-//use near_sdk::env::attached_deposit;
+use near_sdk::env::attached_deposit;
 use near_sdk::env::block_timestamp;
 use near_token::NearToken;
 
@@ -191,17 +191,17 @@ impl CarSharing {
             return Err(Error::InvalidDriver);
         }
         // Calculate end_time based on current time and duration
-        let start_time = env::block_timestamp(); //check that block_timestamp returns values in nanoseconds
+        let start_time = block_timestamp(); //check that block_timestamp returns values in nanoseconds
         let end_time = start_time + (duration as u64 * 3600000000000); // convert duration in hours to nanoseconds
         // Ensure required payment is attached
         let required_deposit: NearToken = NearToken::from_yoctonear(self.calculate_rental_fee(&car_id, duration)?);
-        let attached_deposit: NearToken = env::attached_deposit().into();
+        let attached_deposit: NearToken = attached_deposit().into();
 
         if attached_deposit < required_deposit {
             return Err(Error::InsufficientPayment);
         }
         // get the car reference before any mutable operation on self
-        let mut car: &mut Car = &mut self.cars.get(&car_id).ok_or(Error::CarNotFound)?.clone();
+        let mut car: Car = self.cars.get(&car_id).ok_or(Error::CarNotFound)?.clone();
         // Ensure rental conditions are met
         if !car.available {
             return Err(Error::CarNotAvailable);
