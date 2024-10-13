@@ -1,8 +1,12 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
-use calimero_sdk::{app, borsh::{BorshDeserialize, BorshSerialize}};
+use calimero_sdk::{
+    app, 
+    borsh::{BorshDeserialize, BorshSerialize}
+    env,
+};
 
-use near_sdk::env;
+// use near_sdk::env;
 use near_sdk::AccountId;
 use near_sdk::env::predecessor_account_id;
 //use near_sdk::env::attached_deposit;
@@ -11,13 +15,13 @@ use near_token::NearToken;
 
 #[app::event]
 pub enum Event {
-    CarAdded { car_id: String, owner: String },
-    CarRented { car_id: String, user: String, duration: u32 },
-    CarReturned { car_id: String },
-    UserCreated { user_id: String },
     OwnerCreated { owner_id: String },
+    UserCreated { user_id: String },
+    CarAdded { car_id: String, owner: String },
     CarBooked { car_id: String, user: String, start_time: u64, end_time: u64, deposit: u128 },
     BookingCancelled { booking_id: String, user: String, deposit_retained: u128 },
+    CarRented { car_id: String, user: String, duration: u32 },
+    CarReturned { car_id: String },
 }
 
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
@@ -65,6 +69,7 @@ impl CarSharing {
     pub fn init() -> Self {
         CarSharing::default()
     }
+
     pub fn create_owner_account(&mut self, owner_id: String, name: String) -> Result<(), Error> {
         if self.owners.contains_key(&owner_id) {
             return Err(Error::OwnerAlreadyExists);
@@ -77,6 +82,7 @@ impl CarSharing {
         app::emit!(Event::OwnerCreated { owner_id });
         Ok(())
     }
+
     pub fn create_user_account(&mut self, user_id: String, name: String, driving_license: String) -> Result<(), Error> {
         if self.users.contains_key(&user_id) {
             return Err(Error::UserAlreadyExists);
@@ -89,6 +95,7 @@ impl CarSharing {
         app::emit!(Event::UserCreated { user_id });
         Ok(())
     }
+
     pub fn add_car(&mut self, car_id: String, owner_id: String, hourly_rate: u128) -> Result<(), Error> {
         // Ensure caller has permission to add a car
         let caller = predecessor_account_id();
@@ -114,6 +121,7 @@ impl CarSharing {
         app::emit!(Event::CarAdded { car_id: car_id.clone(), owner: owner_id.clone() });
         Ok(())
     }
+
     // book_car allows users to book a car in advance with a deposit
     pub fn book_car(&mut self, car_id: String, user_id: String, start_time: u64, end_time: u64, deposit: NearToken) -> Result<(), Error> {
         // Ensure the car exists, driver is valid, and car is available
@@ -158,6 +166,7 @@ impl CarSharing {
         app::emit!(Event::CarBooked { car_id, user: user_id.clone(), start_time, end_time, deposit: deposit_amount.as_yoctonear() });
         Ok(())
     }
+
     pub fn cancel_booking(&mut self, booking_id: String) -> Result<(), Error> {
         if let Some(booking) = self.bookings.remove(&booking_id) {
             let _car_id = booking.car_id.clone();
@@ -174,6 +183,7 @@ impl CarSharing {
             Err(Error::BookingNotFound)
         }
     }
+
     // rent_car allows users to rent a car immediately with payment
     pub fn rent_car(&mut self, car_id: String, user_id: String, duration: u32) -> Result<(), Error> {
         // Ensure the user has a valid license
@@ -207,6 +217,7 @@ impl CarSharing {
         app::emit!(Event::CarRented { car_id: car_id.clone(), user: user_id.clone(), duration });
         Ok(())
     }
+
     pub fn return_car(&mut self, car_id: String) -> Result<(), Error> {
         let now = block_timestamp();
         let car = self.cars.get_mut(&car_id).ok_or(Error::CarNotFound)?;
@@ -226,6 +237,29 @@ impl CarSharing {
         app::emit!(Event::CarReturned { car_id: car_id.clone() });
         Ok(())
     }
+    // Helper functions
+    fn is_owner(&self, account_id: &AccountId) -> bool {
+        self.owners.contains_key(&account_id.to_string())
+    }
+
+    fn is_valid_driver(&self, user_id: &String) -> bool {
+        self.users.get(user_id).map(|user| !user.driving_license.is_empty()).unwrap_or(false)
+    }
+
+    fn calculate_rental_fee(&self, car_id: &str, duration: u32) -> Result<u128, Error> {
+        let car = self.cars.get(car_id).ok_or(Error::CarNotFound)?;
+        Ok((duration as u128) * car.hourly_rate)
+    }
+
+    fn is_car_booked(&self, car_id: &str, start_time: u64, end_time: u64) -> bool {
+        self.bookings.values().any(|booking| {
+            booking.car_id == car_id && 
+            ((start_time >= booking.start_time && start_time < booking.end_time) ||
+             (end_time > booking.start_time && end_time <= booking.end_time) ||
+             (start_time <= booking.start_time && end_time >= booking.end_time))
+        })
+    }
+    /*
     pub fn list_cars(&self) -> Vec<String> {
         self.cars.keys().cloned().collect()
     }
@@ -237,25 +271,7 @@ impl CarSharing {
             .map(|car| car.available)
             .ok_or(Error::CarNotFound)
     }
-    // Helper methods, private functions
-    fn is_owner(&self, account_id: &AccountId) -> bool {
-        self.owners.contains_key(&account_id.to_string())
-    }
-    fn is_valid_driver(&self, user_id: &String) -> bool {
-        self.users.get(user_id).map(|user| !user.driving_license.is_empty()).unwrap_or(false)
-    }
-    fn calculate_rental_fee(&self, car_id: &str, duration: u32) -> Result<u128, Error> {
-        let car = self.cars.get(car_id).ok_or(Error::CarNotFound)?;
-        Ok((duration as u128) * car.hourly_rate)
-    }
-    fn is_car_booked(&self, car_id: &str, start_time: u64, end_time: u64) -> bool {
-        self.bookings.values().any(|booking| {
-            booking.car_id == car_id && 
-            ((start_time >= booking.start_time && start_time < booking.end_time) ||
-             (end_time > booking.start_time && end_time <= booking.end_time) ||
-             (start_time <= booking.start_time && end_time >= booking.end_time))
-        })
-    }    
+    */
 }
 
 #[derive(Debug, Serialize, Deserialize)]

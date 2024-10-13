@@ -9,7 +9,7 @@
 .env.*
 
 # Ignore Node.js modules
-/node_modules
+/frontend/node_modules
 
 # Ignore Yarn PnP files
 /.pnp
@@ -19,7 +19,7 @@
 /coverage
 
 # Ignore production builds
-/build
+/frontend/build
 
 # Ignore local environment files
 .env.local
