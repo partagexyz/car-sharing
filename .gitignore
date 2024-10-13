@@ -1,6 +1,3 @@
-# Ignore Rust build artifacts
-/target
-
 # Ignore OSX Thumbnail files
 .DS_Store
 
@@ -8,18 +5,9 @@
 .env
 .env.*
 
-# Ignore Node.js modules
-/frontend/node_modules
-
 # Ignore Yarn PnP files
 /.pnp
 .pnp.js
-
-# Ignore Jest coverage reports
-/coverage
-
-# Ignore production builds
-/frontend/build
 
 # Ignore local environment files
 .env.local
@@ -31,3 +19,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Ignore VS Code workspace files
+*.code-workspace

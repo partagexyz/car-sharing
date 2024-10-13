@@ -1,3 +1,4 @@
+# Ignore Rust build artifacts
 /target
 /coverage
 /res
