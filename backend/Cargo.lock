@@ -72,7 +72,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "car-sharing"
+name = "car_sharing"
 version = "0.1.0"
 dependencies = [
  "borsh",
