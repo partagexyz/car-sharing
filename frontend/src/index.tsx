@@ -11,8 +11,8 @@ if (rootElement) {
   const root = createRoot(rootElement);
 
   // global setup for RpcClient and SubscriptionsClient
-  const rpcClient = new JsonRpcClient(process.env["NEXT_PUBLIC_API_URL"] || "default-url", "/jsonrpc");
-  const subscriptionsClient = new WsSubscriptionsClient(process.env["NEXT_PUBLIC_API_URL"] || "default-url", "/ws");
+  const rpcClient = new JsonRpcClient(process.env["REACT_APP_API_URL"] || "default-url", "/jsonrpc");
+  const subscriptionsClient = new WsSubscriptionsClient(process.env["REACT_APP_API_URL"] || "default-url", "/ws");
 
   root.render(
     <React.StrictMode>
