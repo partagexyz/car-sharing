@@ -8,7 +8,38 @@ const UserProfile = ({ user }) => {
     const isOwner = user.role === 'owner';
 
     // function to fetch cars for owners
-    
+    const fetchCars = async () => {
+        try {
+            const carsList = await wallet.callMethod('list_owner_cars', { owner_id: user.id });
+            setCars(carsList);
+        } catch (error) {
+            console.error('Error fetching cars:', error);
+        }
+    };
+
+    // function to add a car for owners
+    const addCar = async (carData) => {
+        try {
+            const result = await wallet.callMethod('add_car', { owner_id: user.id, car: carData });
+            if (result.success) {
+                fetchCars();
+            } else {
+                console.error('Error adding car:', result.error);
+            }
+        } catch (error) {
+            console.error('Error adding car:', error);
+        }
+    };
+
+    // function to fetch bookings for users
+    const fetchBookings = async () => {
+        try {
+            const bookingsList = await wallet.callMethod('list_user_bookings', { user_id: user.id });
+            setBookings(bookingsList);
+        } catch (error) {
+            console.error('Error fetching bookings:', error);
+        }
+    };
 
     return (
         <div>

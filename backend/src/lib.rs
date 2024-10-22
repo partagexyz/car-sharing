@@ -27,7 +27,6 @@ pub enum Event {
     },
     CarDeleted {
         car_id: String,
-        owner: String,
     },
     CarBooked {
         car_id: String,
@@ -70,7 +69,7 @@ pub struct Car {
     hourly_rate: u128,
     // add vehicle licence or registration certificate (carte grise)
 }
-#[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
+#[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Clone)]
 pub struct Booking {
     booking_id: String,
     car_id: String,
@@ -198,8 +197,7 @@ impl CarSharing {
             return Err(Error::CarNotFound);
         }
         app::emit!(Event::CarDeleted {
-            car_id: car_id.clone(),
-            owner: owner_id.clone()
+            car_id: car_id.clone()
         });
         Ok(())
     }
@@ -378,7 +376,12 @@ impl CarSharing {
         Ok((duration as u128) * car.hourly_rate)
     }
 
-    fn is_car_booked(&self, car_id: &str, start_time: u64, end_time: u64) -> bool {
+    fn is_car_booked(
+        &self, 
+        car_id: &str, 
+        start_time: u64, 
+        end_time: u64
+    ) -> bool {
         self.bookings.values().any(|booking| {
             booking.car_id == car_id
                 && ((start_time >= booking.start_time && start_time < booking.end_time)
@@ -393,6 +396,9 @@ impl CarSharing {
     }
     pub fn list_avalaible_cars(&self) -> Vec<Car> {
         self.cars.values().cloned().filter(|car| car.available).collect()
+    }
+    pub fn list_user_bookings(&self, user_id: String) -> Vec<Booking> {
+        self.bookings.values().filter(|b| b.user_id == user_id).cloned().collect()
     }
     /*
     pub fn get_car_info(&self, car_id: String) -> Option<&Car> {
