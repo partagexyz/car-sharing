@@ -1,7 +1,14 @@
-import React from 'react';
+import React, { useState, useContext } from 'react';
+import { NearContext } from '@/wallets/near';
 
 const UserProfile = ({ user }) => {
+    const { wallet } = useContext(NearContext);
+    const [cars, setCars] = useState([]);
+    const [bookings, setBookings] = useState([]);
     const isOwner = user.role === 'owner';
+
+    // function to fetch cars for owners
+    
 
     return (
         <div>

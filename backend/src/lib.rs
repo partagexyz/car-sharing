@@ -25,6 +25,10 @@ pub enum Event {
         car_id: String,
         owner: String,
     },
+    CarDeleted {
+        car_id: String,
+        owner: String,
+    },
     CarBooked {
         car_id: String,
         user: String,
@@ -181,7 +185,10 @@ impl CarSharing {
     }
 
     // delete_car allows owners to remove a car from the system
-    pub fn delete_car(&mut self, car_id: String) -> Result<(), Error> {
+    pub fn delete_car(
+        &mut self, 
+        car_id: String
+    ) -> Result<(), Error> {
         // Ensure caller has permission to delete a car
         let caller = predecessor_account_id();
         if !self.is_owner(&caller) {
@@ -190,6 +197,10 @@ impl CarSharing {
         if self.cars.remove(&car_id).is_none() {
             return Err(Error::CarNotFound);
         }
+        app::emit!(Event::CarDeleted {
+            car_id: car_id.clone(),
+            owner: owner_id.clone()
+        });
         Ok(())
     }
 
@@ -375,10 +386,15 @@ impl CarSharing {
                     || (start_time <= booking.start_time && end_time >= booking.end_time))
         })
     }
-    /*
-    pub fn list_cars(&self) -> Vec<String> {
-        self.cars.keys().cloned().collect()
+    
+    // read-only functions
+    pub fn list_owner_cars(&self, owner_id: String) -> Vec<Car> {
+        self.cars.values().cloned().filter(|car| car.owner_id == owner_id).collect()
     }
+    pub fn list_avalaible_cars(&self) -> Vec<Car> {
+        self.cars.values().cloned().filter(|car| car.available).collect()
+    }
+    /*
     pub fn get_car_info(&self, car_id: String) -> Option<&Car> {
         self.cars.get(&car_id)
     }
