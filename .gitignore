@@ -22,3 +22,7 @@ yarn-error.log*
 
 # Ignore VS Code workspace files
 *.code-workspace
+
+# Ignore build artifacts and cache from Next.js
+/.next
+/.next/**/*
