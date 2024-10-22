@@ -6,3 +6,4 @@
 
 # Ignore build artifacts and cache from Next.js
 /.next
+/.next/**/*
