@@ -1,5 +1,5 @@
 // this component will display options for creating a user or owner account
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { NearContext } from '@/wallets/near';
 
@@ -10,15 +10,26 @@ const AccountCreation = ({ setAccountCreated }) => {
     const [accountType, setAccountType] = useState('user');
     const [name, setName] = useState('');
     const [license, setLicense] = useState('');
-    const [isOwner, setIsOwner] = useState(false);
+    //const [isOwner, setIsOwner] = useState(false);
 
+    // function to handle form submission
     const handleSubmit = async (event) => {
         event.preventDefault();
         setError('');
         try {
-            let result;
+            //let result;
             const accountId = wallet.getAccountId();
+
+            // map account type to the correct method and parameter
+            const method = accountType === 'user' ? 'create_user_account' : 'create_owner_account';
+            const args = accountType === 'user' 
+              ? { user_id: accountId, name, driving_license: license } 
+              : { owner_id: accountId, name };
+
+            // call the smart contract method
+            const result = await wallet.callMethod(method, args);
             
+            /*
             if (accountType === 'user') {
                 // Call the create_user_account method in smart contract
                 result = await wallet.callMethod('create_user_account', {
@@ -32,9 +43,10 @@ const AccountCreation = ({ setAccountCreated }) => {
                     owner_id: accountId,
                     name,
                 });
-            }
+            } */
 
             if (result.success) {
+              // update accountCreated state in the parent component
                 setAccountCreated(true);
                 // Navigate to UserProfile after account creation
                 router.push('/userprofile');

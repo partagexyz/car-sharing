@@ -1,11 +1,29 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { NearContext } from '@/wallets/near';
 
 const UserProfile = ({ user }) => {
     const { wallet } = useContext(NearContext);
     const [cars, setCars] = useState([]);
     const [bookings, setBookings] = useState([]);
+    const [userData, setUserData] = useState(null);
     const isOwner = user.role === 'owner';
+
+    // Function to fetch user's profile data
+    const fetchUserData = async () => {
+        try {
+            const contract = await wallet.getContract();
+            const userData = await contract.getUser(user.id);
+            setUserData(userData);
+            // If the user has cars or bookings, fetch them after getting userData
+            if(userData && userData.role === 'owner') {
+                fetchCars();
+            } else {
+                fetchBookings();
+            }
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+        }
+    };
 
     // function to fetch cars for owners
     const fetchCars = async () => {
@@ -41,26 +59,63 @@ const UserProfile = ({ user }) => {
         }
     };
 
+    // function to book a car for users
+    const bookCar = async (carId, startDate, endDate) => {
+        try {
+            // convert dates to nanoseconds to match smart contract
+            const startTime = new Date(startDate).getTime() * 1000000;
+            const endTime = new Date(endDate).getTime() * 1000000;
+
+            const result = await wallet.callMethod('book_car', {
+                car_id: carId,
+                user_id: user.id, 
+                start_time: startTime, 
+                end_time: endTime 
+            });
+
+            if (result.success) {
+                // fetch bookings to update the list
+                fetchBookings();
+            } else {
+                console.error('Error booking car:', result.error);
+            }
+        } catch (error) {
+            console.error('Error booking car:', error);
+        }
+    };
+
+    // Fetch data when component mounts
+    React.useEffect(() => {
+        fetchUserData();
+    }, []);
+
+    // If user data hasn't been fetched yet, show a loading state
+    if (!userData) {
+        return <div>Loading user profile...</div>;
+    }
+
     return (
         <div>
-            <h1>Welcome, {user.name}</h1>
+            <h1>Welcome, {userData.name}</h1>
             {isOwner ? (
                 <div>
                     <h2>Your Cars</h2>
                     <ul>
-                        {user.cars.map(car => (
+                        {cars.map(car => (
                             <li key={car.id}>{car.model}</li>
                         ))}
                     </ul>
+                    <button onClick={() => addCar({ car_id: "new-car-1", hourly_rate: "1000000000000000000000000" })}>Add Car</button>
                 </div>
             ) : (
                 <div>
                     <h2>Your Bookings</h2>
                     <ul>
-                        {user.bookings.map(booking => (
+                        {bookings.map(booking => (
                             <li key={booking.id}>{booking.carModel}</li>
                         ))}
                     </ul>
+                    <button onClick={() => bookCar("some-car-id", "2023-10-23", "2023-10-24")}>Book Car</button>
                 </div>
             )}
         </div>

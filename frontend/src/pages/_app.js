@@ -5,6 +5,7 @@ import { Wallet, NearContext } from '@/wallets/near';
 import { NetworkId } from '@/config';
 import AccountCreation from '@/components/AccountCreation';
 import UserProfile from '@/components/UserProfile';
+import { useRouter } from 'next/router';
 
 const wallet = new Wallet({ networkId: NetworkId });
 
@@ -13,6 +14,7 @@ export default function MyApp({ Component, pageProps }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [accountCreated, setAccountCreated] = useState(null);
+  const router = useRouter();
 
   useEffect(() => { 
     wallet.startUp((accountId) => {
@@ -43,6 +45,12 @@ export default function MyApp({ Component, pageProps }) {
     }
   };
 
+  const handleAccountCreated = () => {
+    setAccountCreated(true);
+    // Navigate to User Profile after account creation
+    router.push('/userprofile'); // Assuming you have a route set up for user profile
+  };
+
   const nearContext = useMemo(() => ({
     wallet,
     signedAccountId,
@@ -61,10 +69,13 @@ export default function MyApp({ Component, pageProps }) {
         <div>Please sign in to continue</div>
       ) : accountCreated === null ? (
         <div>Loading...</div>
-      ) : accountCreated ? (
-        <Component {...pageProps} />
+      ) : accountCreated === false ? (
+        <AccountCreation 
+          setAccountCreated={setAccountCreated} 
+          onAccountCreated={handleAccountCreated}
+        />
       ) : (
-        <AccountCreation setAccountCreated={setAccountCreated} />
+        <UserProfile user={{ id: signedAccountId, role: 'user' }} />
       )}
     </NearContext.Provider>
   );
