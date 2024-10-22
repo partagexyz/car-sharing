@@ -3,3 +3,6 @@
 
 # Ignore production builds
 /build
+
+# Ignore build artifacts and cache from Next.js
+/.next
