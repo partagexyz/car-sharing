@@ -24,5 +24,5 @@ yarn-error.log*
 *.code-workspace
 
 # Ignore build artifacts and cache from Next.js
-/.next
-/.next/**/*
+.next
+.next/**/*
