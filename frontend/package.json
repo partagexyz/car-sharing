@@ -1,48 +1,45 @@
 {
-  "name": "car-sharing-frontend",
-  "version": "0.1.0",
+  "name": "hello-near",
+  "version": "1.0.0",
   "private": true,
-  "dependencies": {
-    "@calimero-is-near/calimero-p2p-sdk": "^0.0.41",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.113",
-    "near-api-js": "^5.0.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.27.0",
-    "react-scripts": "5.0.1",
-    "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
+  "engines": {
+    "node": ">=18"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+  "dependencies": {
+    "@near-js/providers": "^1.0.0",
+    "@near-wallet-selector/bitte-wallet": "^8.9.13",
+    "@near-wallet-selector/core": "^8.9.13",
+    "@near-wallet-selector/ethereum-wallets": "^8.9.13",
+    "@near-wallet-selector/here-wallet": "^8.9.13",
+    "@near-wallet-selector/ledger": "^8.9.13",
+    "@near-wallet-selector/meteor-wallet": "^8.9.13",
+    "@near-wallet-selector/modal-ui": "^8.9.13",
+    "@near-wallet-selector/my-near-wallet": "^8.9.13",
+    "@near-wallet-selector/sender": "^8.9.13",
+    "@web3modal/wagmi": "^5.1.10",
+    "bootstrap": "^5",
+    "bootstrap-icons": "^1.11.3",
+    "near-api-js": "^4.0.3",
+    "next": "14.2.13",
+    "react": "^18",
+    "react-dom": "^18",
+    "wagmi": "^2.12.16"
   },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "overrides": {
+    "@near-wallet-selector/ethereum-wallets": {
+      "near-api-js": "4.0.3"
+    }
   },
   "devDependencies": {
-    "@types/react": "^18.3.11",
-    "@types/react-dom": "^18.3.1"
+    "encoding": "^0.1.13",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.13",
+    "pino-pretty": "^11.2.2"
   }
 }

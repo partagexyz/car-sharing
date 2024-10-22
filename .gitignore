@@ -22,3 +22,6 @@ yarn-error.log*
 
 # Ignore VS Code workspace files
 *.code-workspace
+
+# Ignore node_modules
+/node_modules
