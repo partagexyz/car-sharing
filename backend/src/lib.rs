@@ -5,12 +5,8 @@ use calimero_sdk::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+use near_sdk::env::{attached_deposit, block_timestamp, predecessor_account_id};
 use near_sdk::AccountId;
-use near_sdk::env::{
-    attached_deposit,
-    block_timestamp,
-    predecessor_account_id,
-};
 use near_token::NearToken;
 
 #[app::event]
@@ -98,17 +94,13 @@ impl CarSharing {
         CarSharing::default()
     }
 
-    pub fn create_owner_account(
-        &mut self, 
-        owner_id: String, 
-        name: String
-    ) -> Result<(), Error> {
+    pub fn create_owner_account(&mut self, owner_id: String, name: String) -> Result<(), Error> {
         if self.owners.contains_key(&owner_id) {
             return Err(Error::OwnerAlreadyExists);
         }
         // store owner information
         let account_id: AccountId = owner_id.parse().map_err(|_| Error::InvalidAccountId)?;
-        
+
         self.owners.insert(
             owner_id.clone(),
             Owner {
@@ -153,7 +145,7 @@ impl CarSharing {
         hourly_rate: u128,
     ) -> Result<(), Error> {
         // Ensure caller has permission to add a car
-        let caller = predecessor_account_id();
+        let caller: AccountId = predecessor_account_id();
         if !self.is_owner(&caller) {
             return Err(Error::Unauthorized);
         }
@@ -184,12 +176,9 @@ impl CarSharing {
     }
 
     // delete_car allows owners to remove a car from the system
-    pub fn delete_car(
-        &mut self, 
-        car_id: String
-    ) -> Result<(), Error> {
+    pub fn delete_car(&mut self, car_id: String) -> Result<(), Error> {
         // Ensure caller has permission to delete a car
-        let caller = predecessor_account_id();
+        let caller: AccountId = predecessor_account_id();
         if !self.is_owner(&caller) {
             return Err(Error::Unauthorized);
         }
@@ -213,7 +202,7 @@ impl CarSharing {
     ) -> Result<(), Error> {
         // Convert user_id to AccountId
         let user_account_id: AccountId = user_id.parse().map_err(|_| Error::InvalidAccountId)?;
-        
+
         // Ensure the driver is valid, the car exists, and is available
         if !self.is_user(&user_account_id) {
             return Err(Error::InvalidDriver);
@@ -242,7 +231,7 @@ impl CarSharing {
             return Err(Error::InsufficientDeposit);
         }
         // Generate a unique booking ID
-        let booking_id = format!("{}-{}-{}", car_id, user_id, start_time);
+        let booking_id: String = format!("{}-{}-{}", car_id, user_id, start_time);
         // Create booking
         self.bookings.insert(
             booking_id.clone(),
@@ -268,9 +257,9 @@ impl CarSharing {
 
     pub fn cancel_booking(&mut self, booking_id: String) -> Result<(), Error> {
         if let Some(booking) = self.bookings.remove(&booking_id) {
-            let _car_id = booking.car_id.clone();
-            let user_id = booking.user_id.clone();
-            let deposit = booking.deposit;
+            let _car_id: String = booking.car_id.clone();
+            let user_id: String = booking.user_id.clone();
+            let deposit: u128 = booking.deposit;
             // No refund is processed: the 10% deposit is retained
             app::emit!(Event::BookingCancelled {
                 booking_id: booking_id.clone(),
@@ -298,9 +287,9 @@ impl CarSharing {
             return Err(Error::InvalidDriver);
         }
         // Calculate end_time based on current time and duration
-        let start_time = block_timestamp(); //check that block_timestamp returns values in nanoseconds
-        let end_time = start_time + (duration as u64 * 3600000000000); // convert duration in hours to nanoseconds
-                                                                       // Ensure required payment is attached
+        let start_time: u64 = block_timestamp(); //check that block_timestamp returns values in nanoseconds
+        let end_time: u64 = start_time + (duration as u64 * 3600000000000); // convert duration in hours to nanoseconds
+                                                                            // Ensure required payment is attached
         let required_deposit: NearToken =
             NearToken::from_yoctonear(self.calculate_rental_fee(&car_id, duration)?);
         let attached_deposit: NearToken = attached_deposit().into();
@@ -337,8 +326,8 @@ impl CarSharing {
     }
 
     pub fn return_car(&mut self, car_id: String) -> Result<(), Error> {
-        let now = block_timestamp();
-        let car = self.cars.get_mut(&car_id).ok_or(Error::CarNotFound)?;
+        let now: u64 = block_timestamp();
+        let car: &mut Car = self.cars.get_mut(&car_id).ok_or(Error::CarNotFound)?;
         car.available = true;
         // Cancel the booking that corresponds to the current rental
         if let Some(booking) = self
@@ -346,9 +335,9 @@ impl CarSharing {
             .iter()
             .find(|(_, b)| b.car_id == car_id && now >= b.start_time && now <= b.end_time)
         {
-            let booking_id = booking.0.clone();
-            let user_id = booking.1.user_id.clone();
-            let deposit = booking.1.deposit;
+            let booking_id: String = booking.0.clone();
+            let user_id: String = booking.1.user_id.clone();
+            let deposit: u128 = booking.1.deposit;
             self.bookings.remove(&booking_id);
             app::emit!(Event::BookingCancelled {
                 booking_id: booking_id.clone(),
@@ -372,33 +361,40 @@ impl CarSharing {
     }
 
     fn calculate_rental_fee(&self, car_id: &str, duration: u32) -> Result<u128, Error> {
-        let car = self.cars.get(car_id).ok_or(Error::CarNotFound)?;
+        let car: &Car = self.cars.get(car_id).ok_or(Error::CarNotFound)?;
         Ok((duration as u128) * car.hourly_rate)
     }
 
-    fn is_car_booked(
-        &self, 
-        car_id: &str, 
-        start_time: u64, 
-        end_time: u64
-    ) -> bool {
-        self.bookings.values().any(|booking| {
+    fn is_car_booked(&self, car_id: &str, start_time: u64, end_time: u64) -> bool {
+        self.bookings.values().any(|booking: &Booking| {
             booking.car_id == car_id
                 && ((start_time >= booking.start_time && start_time < booking.end_time)
                     || (end_time > booking.start_time && end_time <= booking.end_time)
                     || (start_time <= booking.start_time && end_time >= booking.end_time))
         })
     }
-    
+
     // read-only functions
     pub fn list_owner_cars(&self, owner_id: String) -> Vec<Car> {
-        self.cars.values().cloned().filter(|car| car.owner_id == owner_id).collect()
+        self.cars
+            .values()
+            .cloned()
+            .filter(|car| car.owner_id == owner_id)
+            .collect()
     }
     pub fn list_avalaible_cars(&self) -> Vec<Car> {
-        self.cars.values().cloned().filter(|car| car.available).collect()
+        self.cars
+            .values()
+            .cloned()
+            .filter(|car| car.available)
+            .collect()
     }
     pub fn list_user_bookings(&self, user_id: String) -> Vec<Booking> {
-        self.bookings.values().filter(|b| b.user_id == user_id).cloned().collect()
+        self.bookings
+            .values()
+            .filter(|b| b.user_id == user_id)
+            .cloned()
+            .collect()
     }
     /*
     pub fn get_car_info(&self, car_id: String) -> Option<&Car> {

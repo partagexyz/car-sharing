@@ -1,0 +1,19 @@
+{ repr: Detailed { kind: Execution, error: ExecutionResult { total_gas_burnt: NearGas { inner: 5079203437220
+            }, transaction: ExecutionOutcome { transaction_hash: 4c7g4CLbiVWtsbuYTNdozBBD5tX69BeFgXQfABGS8DeZ, block_hash: 6vJWr8YvMGkfHdCK8v2ixdUVE5BoXFbnWSYw3Er6gJN4, logs: [], receipt_ids: [DtPz53GYEt4GcgZrZqxz6BinoMGBNuRJw4qvFX26x1Ga
+                ], gas_burnt: NearGas { inner: 2428010437360
+                }, tokens_burnt: NearToken { inner: 242801043736000000000
+                }, executor_id: AccountId("test.near"), status: SuccessReceiptId(DtPz53GYEt4GcgZrZqxz6BinoMGBNuRJw4qvFX26x1Ga)
+            }, receipts: [ExecutionOutcome { transaction_hash: DtPz53GYEt4GcgZrZqxz6BinoMGBNuRJw4qvFX26x1Ga, block_hash: 2qAxDuc2riWbnHChhuGEcSYZeMXvMFwabSWrn4KcjMDh, logs: [], receipt_ids: [Ey3LpUu9ThMhUWS5HPAXULP5u3xvtPFjAvt21ypw9HbS
+                    ], gas_burnt: NearGas { inner: 2428010437360
+                    }, tokens_burnt: NearToken { inner: 242801043736000000000
+                    }, executor_id: AccountId("dev-20241022163517-86910254650165"), status: Failure(ActionError(ActionError { index: Some(0), kind: FunctionCallError(MethodResolveError(MethodNotFound))
+                    }))
+                }, ExecutionOutcome { transaction_hash: Ey3LpUu9ThMhUWS5HPAXULP5u3xvtPFjAvt21ypw9HbS, block_hash: EDpMpbh8Pn1RJ1rAHiBs6j7yYdmfyveN4LQtbDRVavzi, logs: [], receipt_ids: [], gas_burnt: NearGas { inner: 223182562500
+                    }, tokens_burnt: NearToken { inner: 0
+                    }, executor_id: AccountId("test.near"), status: SuccessValue('')
+                }
+            ], value: ActionError(ActionError { index: Some(0), kind: FunctionCallError(MethodResolveError(MethodNotFound))
+            })
+        }
+    }
+}
