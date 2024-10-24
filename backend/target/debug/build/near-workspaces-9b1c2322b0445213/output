@@ -1,2 +1,0 @@
-cargo:rerun-if-env-changed=NEAR_SANDBOX_BIN_PATH
-Installed near-sandbox into /Users/juliencarbonnell/near/backend_car_sharing/target/debug/build/near-sandbox-utils-f125db50512abf7d/out/.near/near-sandbox-2.0.0/near-sandbox
