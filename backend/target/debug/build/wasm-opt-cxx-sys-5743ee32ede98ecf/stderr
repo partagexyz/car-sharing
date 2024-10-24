@@ -1,0 +1,10 @@
+
+CXX include path:
+  /Users/juliencarbonnell/near/backend_car_sharing/target/debug/build/wasm-opt-cxx-sys-5743ee32ede98ecf/out/cxxbridge/include
+  /Users/juliencarbonnell/near/backend_car_sharing/target/debug/build/wasm-opt-cxx-sys-5743ee32ede98ecf/out/cxxbridge/crate
+  /Users/juliencarbonnell/near/backend_car_sharing/target/debug/build/wasm-opt-sys-d900cd04b2c4ff82/out/cxxbridge/include (private)
+  /Users/juliencarbonnell/near/backend_car_sharing/target/debug/build/wasm-opt-sys-d900cd04b2c4ff82/out/cxxbridge/crate (private)
+  /Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wasm-opt-sys-0.116.0/binaryen/src (private)
+  /Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wasm-opt-sys-0.116.0/binaryen/src/tools (private)
+  /Users/juliencarbonnell/near/backend_car_sharing/target/debug/build/wasm-opt-sys-d900cd04b2c4ff82/out (private)
+  /Users/juliencarbonnell/.cargo/registry/src/index.crates.io-6f17d22bba15001f/wasm-opt-sys-0.116.0/binaryen/third_party/llvm-project/include (private)
