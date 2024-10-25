@@ -48,14 +48,14 @@ export default function MyApp({ Component, pageProps }) {
   const handleAccountCreated = () => {
     setAccountCreated(true);
     // Navigate to User Profile after account creation
-    router.push('/userprofile'); // Assuming you have a route set up for user profile
+    router.push('/userprofile');
   };
 
   const nearContext = useMemo(() => ({
     wallet,
     signedAccountId,
     accountCreated
-  }), [wallet, signedAccountId, accountCreated]);
+  }), [signedAccountId, accountCreated]);
 
 
   if (isLoading) {

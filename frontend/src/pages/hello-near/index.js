@@ -2,11 +2,11 @@ import { useState, useEffect, useContext } from 'react';
 
 import { NearContext } from '@/wallets/near';
 import styles from '@/styles/app.module.css';
-import { HelloNearContract } from '../../config';
+import { CarSharingContract } from '../../config';
 import { Cards } from '@/components/cards';
 
 // Contract that the app will interact with
-const CONTRACT = HelloNearContract;
+const CONTRACT = CarSharingContract;
 
 export default function HelloNear() {
   const { signedAccountId, wallet } = useContext(NearContext);

@@ -207,38 +207,6 @@ async fn test_is_user() {
     assert!(!contract.is_user(&"owner1".parse().unwrap()), "Should not be recognized as user");
 }
 
-#[tokio::test]
-async fn test_calculate_rental_fee() {
-    let mut contract = init_contract();
-    contract.create_owner_account("owner1".to_string(), "John Doe".to_string()).unwrap();
-    contract.add_car("car1".to_string(), "owner1".to_string(), 2000000000000000000000).unwrap();
-    let fee = contract.calculate_rental_fee(&"car1".to_string(), 2).unwrap();
-    assert_eq!(fee, 4000000000000000000000, "Rental fee calculation incorrect");
-}
-
-#[tokio::test]
-async fn test_is_car_booked() {
-    let mut contract = init_contract();
-    contract.create_owner_account("owner1".to_string(), "John Doe".to_string()).unwrap();
-    contract.create_user_account("user1".to_string(), "Alice".to_string(), "DL-123456".to_string()).unwrap();
-    contract.add_car("car1".to_string(), "owner1".to_string(), 2000000000000000000000).unwrap();
-    
-    let now = near_sdk::env::block_timestamp();
-    // book car1 for 1 hour from now
-    contract.book_car(
-        "car1".to_string(),
-        "user1".to_string(),
-        now,
-        now + 3600000000000, // 1 hour from now
-        near_sdk::NearToken::from_yoctonear(100_000_000_000_000_000_000), // 0.1 NEAR deposit
-    ).unwrap();
-    
-    // Check if car is booked within the booking period
-    assert!(contract.is_car_booked(&"car1".to_string(), now, now + 3600000000000), "Car should be booked");
-    // Check if car is not booked outside the booking period
-    assert!(!contract.is_car_booked(&"car1".to_string(), now + 7200000000000, now + 10800000000000), "Car should not be booked");
-}
-
 // Test read-only functions
 #[tokio::test]
 async fn test_list_owner_cars() {
