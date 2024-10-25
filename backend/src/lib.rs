@@ -1,3 +1,4 @@
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -7,6 +8,7 @@ use near_sdk::{AccountId};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::{near_bindgen};
 use near_sdk::log;
+use near_sdk::FunctionError;
 use near_token::NearToken;
 
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize)]
@@ -20,7 +22,7 @@ pub struct Owner {
     pub owner_id: String,
     pub name: String,
 }
-#[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Clone)]
+#[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Clone, JsonSchema)]
 pub struct Car {
     pub car_id: String,
     pub owner_id: String,
@@ -28,7 +30,7 @@ pub struct Car {
     pub hourly_rate: u128,
     // add vehicle licence or registration certificate (carte grise)
 }
-#[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Clone)]
+#[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Clone, JsonSchema)]
 pub struct Booking {
     pub booking_id: String,
     car_id: String,
@@ -252,14 +254,16 @@ impl CarSharing {
             return Err(Error::InsufficientPayment);
         }
 
-        // Check if the car is available
-        let car: &mut Car = self.cars.get_mut(&car_id).ok_or(Error::CarNotFound)?;
-        if !car.available {
-            return Err(Error::CarNotAvailable);
+            // Check if the car is available
+        {
+            let car: &mut Car = self.cars.get_mut(&car_id).ok_or(Error::CarNotFound)?;
+            if !car.available {
+                return Err(Error::CarNotAvailable);
+            }
+            // Mark car as unavailable
+            car.available = false;
         }
-        // Mark car as unavailable
-        car.available = false;
-
+        // Generate a unique booking ID
         let booking_id = format!("{}-{}-{}", car_id, user_id.to_string(), start_time);
         let deposit = env::attached_deposit();
         self.book_car(
@@ -278,8 +282,10 @@ impl CarSharing {
     #[handle_result]
     pub fn return_car(&mut self, car_id: String) -> Result<(), Error> {
         let now: u64 = block_timestamp();
-        let car: &mut Car = self.cars.get_mut(&car_id).ok_or(Error::CarNotFound)?;
-        car.available = true;
+        {
+            let car: &mut Car = self.cars.get_mut(&car_id).ok_or(Error::CarNotFound)?;
+            car.available = true;
+        }
         // Cancel the booking that corresponds to the current rental
         if let Some(booking) = self
             .bookings
@@ -344,7 +350,7 @@ impl CarSharing {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub enum Error {
     InvalidProof,
     UserAlreadyExists,
@@ -362,4 +368,27 @@ pub enum Error {
     InvalidBookingTime,
     BookingNotFound,
     InvalidAccountId,
+}
+
+impl FunctionError for Error {
+    fn panic(&self) -> ! {
+        match self {
+            Error::InvalidProof => near_sdk::env::panic_str("Invalid proof provided"),
+            Error::UserAlreadyExists => near_sdk::env::panic_str("User already exists"),
+            Error::OwnerAlreadyExists => near_sdk::env::panic_str("Owner already exists"),
+            Error::CarAlreadyExists => near_sdk::env::panic_str("Car already exists"),
+            Error::UserNotFound => near_sdk::env::panic_str("User not found"),
+            Error::OwnerNotFound => near_sdk::env::panic_str("Owner not found"),
+            Error::CarNotFound => near_sdk::env::panic_str("Car not found"),
+            Error::CarNotAvailable => near_sdk::env::panic_str("Car not available"),
+            Error::InsufficientDeposit => near_sdk::env::panic_str("Insufficient deposit"),
+            Error::InsufficientPayment => near_sdk::env::panic_str("Insufficient payment"),
+            Error::Unauthorized => near_sdk::env::panic_str("Unauthorized"),
+            Error::InvalidUser => near_sdk::env::panic_str("Invalid user"),
+            Error::InvalidHourlyRate => near_sdk::env::panic_str("Invalid hourly rate"),
+            Error::InvalidBookingTime => near_sdk::env::panic_str("Invalid booking time"),
+            Error::BookingNotFound => near_sdk::env::panic_str("Booking not found"),
+            Error::InvalidAccountId => near_sdk::env::panic_str("Invalid account ID"),
+        }
+    }
 }

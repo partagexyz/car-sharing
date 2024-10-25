@@ -121,6 +121,7 @@ dependencies = [
  "near-sdk",
  "near-token",
  "near-workspaces",
+ "schemars",
  "serde",
  "serde_derive",
  "serde_json",
@@ -331,7 +332,7 @@ dependencies = [
 [[package]]
 name = "calimero-sdk"
 version = "0.1.0"
-source = "git+https://github.com/calimero-network/core#8970a7845211c564560ba73c14a16512cc1a2f8e"
+source = "git+https://github.com/calimero-network/core#fd4fdc9c6a8f52baf501ae5f013dbe698064b6e1"
 dependencies = [
  "borsh",
  "calimero-sdk-macros",
@@ -343,7 +344,7 @@ dependencies = [
 [[package]]
 name = "calimero-sdk-macros"
 version = "0.1.0"
-source = "git+https://github.com/calimero-network/core#8970a7845211c564560ba73c14a16512cc1a2f8e"
+source = "git+https://github.com/calimero-network/core#fd4fdc9c6a8f52baf501ae5f013dbe698064b6e1"
 dependencies = [
  "prettyplease 0.2.25",
  "proc-macro2",
@@ -2308,18 +2309,18 @@ dependencies = [
 
 [[package]]
 name = "pin-project"
-version = "1.1.6"
+version = "1.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "baf123a161dde1e524adf36f90bc5d8d3462824a9c43553ad07a8183161189ec"
+checksum = "be57f64e946e500c8ee36ef6331845d40a93055567ec57e8fae13efd33759b95"
 dependencies = [
  "pin-project-internal",
 ]
 
 [[package]]
 name = "pin-project-internal"
-version = "1.1.6"
+version = "1.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4502d8515ca9f32f1fb543d987f63d95a14934883db45bdb48060b6b69257f8"
+checksum = "3c0f5fad0874fc7abcd4d750e76917eaebbecaa2c20bde22e1dbeeba8beb758c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2328,9 +2329,9 @@ dependencies = [
 
 [[package]]
 name = "pin-project-lite"
-version = "0.2.14"
+version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bda66fc9667c18cb2758a2ac84d1167245054bcf85d5d1aaa6923f45801bdd02"
+checksum = "915a1e146535de9163f3987b8944ed8cf49a18bb0056bcebcdcece385cece4ff"
 
 [[package]]
 name = "pin-utils"
@@ -2511,9 +2512,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.11.0"
+version = "1.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38200e5ee88914975b69f657f0801b6f6dccafd44fd9326302a4aaeecfacb1d8"
+checksum = "b544ef1b4eac5dc2db33ea63606ae9ffcfac26c1416a2806ae0bf5f56b201191"
 dependencies = [
  "aho-corasick",
  "memchr",
