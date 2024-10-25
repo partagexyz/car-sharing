@@ -1,4 +1,4 @@
-# car_sharing_backend
+# car_sharing
 
 cargo-near-new-project-description
 

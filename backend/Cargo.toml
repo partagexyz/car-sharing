@@ -1,5 +1,5 @@
 [package]
-name = "car_sharing_backend"
+name = "car_sharing"
 description = "Cargo NEAR project for car-sharing backend"
 version = "0.1.0"
 edition = "2021"

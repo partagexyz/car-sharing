@@ -347,7 +347,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "car_sharing_backend"
+name = "car_sharing"
 version = "0.1.0"
 dependencies = [
  "borsh",

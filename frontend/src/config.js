@@ -1,9 +1,9 @@
 const contractPerNetwork = {
-  mainnet: 'hello.near-examples.near',
-  testnet: 'hello.near-examples.testnet',
+  mainnet: 'car_sharing.near',
+  testnet: 'car_sharing.testnet',
 };
 
-// Chains for EVM Wallets 
+// Chains for EVM Wallets
 const evmWalletChains = {
   mainnet: {
     chainId: 397,
@@ -20,5 +20,5 @@ const evmWalletChains = {
 }
 
 export const NetworkId = 'testnet';
-export const HelloNearContract = contractPerNetwork[NetworkId];
+export const CarSharingContract = contractPerNetwork[NetworkId];
 export const EVMWalletChain = evmWalletChains[NetworkId];
