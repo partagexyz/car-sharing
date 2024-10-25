@@ -26,3 +26,6 @@ yarn-error.log*
 # Ignore build artifacts and cache from Next.js
 .next
 .next/**/*
+
+# Ignore build artifacts from target folder in backend
+/backend/target/
