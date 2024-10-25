@@ -1,4 +1,4 @@
-use backend_car_sharing::CarSharing;
+use car_sharing_backend::CarSharing;
 use near_sdk::{testing_env, AccountId, Gas};
 use near_sdk::test_utils::{accounts, VMContextBuilder};
 use near_token::NearToken;

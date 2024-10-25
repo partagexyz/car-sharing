@@ -1,6 +1,6 @@
 [package]
-name = "backend_car_sharing"
-description = "cargo-near-new-project-description"
+name = "car_sharing_backend"
+description = "Cargo NEAR project for car-sharing backend"
 version = "0.1.0"
 edition = "2021"
 repository = "https://github.com/partagexyz/car-sharing"

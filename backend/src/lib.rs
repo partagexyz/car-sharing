@@ -2,7 +2,6 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use near_sdk::env;
 use near_sdk::env::{attached_deposit, block_timestamp, predecessor_account_id};
 use near_sdk::{AccountId};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
@@ -182,14 +181,18 @@ impl CarSharing {
             return Err(Error::CarNotAvailable);
         }
         // Ensure the car is not already booked for this period
-        if self.is_car_booked(&car_id, start_time, end_time) {
+        if self.bookings.values().any(|booking| {
+            booking.car_id == car_id
+                && ((start_time >= booking.start_time && start_time < booking.end_time)
+                || (end_time > booking.start_time && end_time <= booking.end_time)
+                || (start_time <= booking.start_time && end_time >= booking.end_time))
+        }) {
             return Err(Error::CarNotAvailable);
         }
         // Calculate deposit required (10% of rental fee)
         let rental_duration: u64 = (end_time - start_time) / 3600000000000; // Convert to hours
-        let rental_fee: u128 = self.calculate_rental_fee(&car_id, rental_duration as u32)?;
+        let rental_fee: u128 = (rental_duration as u128) * car.hourly_rate;
         let deposit_amount: NearToken = NearToken::from_yoctonear((rental_fee / 10) * 9); // 10% of rental fee
-        //let attached_deposit: NearToken = NearToken::from_yoctonear(env::attached_deposit());
         // Check if enough deposit was attached
         if deposit < deposit_amount {
             return Err(Error::InsufficientDeposit);
@@ -246,26 +249,22 @@ impl CarSharing {
         // Calculate end_time based on current time and duration
         let start_time: u64 = block_timestamp(); //check that block_timestamp returns values in nanoseconds
         let end_time: u64 = start_time + (duration as u64 * 3600000000000); // convert duration in hours to nanoseconds
-
+        // Ensure the car exists and is available
+        let car: &mut Car = self.cars.get_mut(&car_id).ok_or(Error::CarNotFound)?;
         // Ensure required payment is attached
-        let required_deposit: NearToken = NearToken::from_yoctonear(self.calculate_rental_fee(&car_id, duration)?);
+        let required_deposit: NearToken = NearToken::from_yoctonear((duration as u128) * car.hourly_rate);
         let attached_deposit: NearToken = attached_deposit().into();
         if attached_deposit < required_deposit {
             return Err(Error::InsufficientPayment);
         }
 
-            // Check if the car is available
-        {
-            let car: &mut Car = self.cars.get_mut(&car_id).ok_or(Error::CarNotFound)?;
-            if !car.available {
-                return Err(Error::CarNotAvailable);
-            }
-            // Mark car as unavailable
-            car.available = false;
+        // Check if the car is available
+        if !car.available {
+            return Err(Error::CarNotAvailable);
         }
-        // Generate a unique booking ID
-        let booking_id = format!("{}-{}-{}", car_id, user_id.to_string(), start_time);
-        let deposit = env::attached_deposit();
+        // Mark car as unavailable
+        car.available = false;
+
         self.book_car(
             car_id.clone(),
             user_id.clone(),
@@ -309,21 +308,6 @@ impl CarSharing {
 
     pub fn is_user(&self, account_id: &AccountId) -> bool {
         self.users_accounts.contains(account_id)
-    }
-
-    #[handle_result]
-    pub fn calculate_rental_fee(&self, car_id: &str, duration: u32) -> Result<u128, Error> {
-        let car: &Car = self.cars.get(car_id).ok_or(Error::CarNotFound)?;
-        Ok((duration as u128) * car.hourly_rate)
-    }
-
-    pub fn is_car_booked(&self, car_id: &str, start_time: u64, end_time: u64) -> bool {
-        self.bookings.values().any(|booking: &Booking| {
-            booking.car_id == car_id
-                && ((start_time >= booking.start_time && start_time < booking.end_time)
-                    || (end_time > booking.start_time && end_time <= booking.end_time)
-                    || (start_time <= booking.start_time && end_time >= booking.end_time))
-        })
     }
 
     // read-only functions
