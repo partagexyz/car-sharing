@@ -20,6 +20,10 @@ const AccountCreation = ({ setAccountCreated }) => {
         if (!signedAccountId) {
           throw new Error("Account ID not defined. Please sign in.");
         }
+
+        // Defined the contract ID
+        const contractId = 'partage.testnet';
+
         // map account type to the correct method and parameter
         const method = accountType === 'user' ? 'create_user_account' : 'create_owner_account';
         const args = accountType === 'user' 
@@ -27,7 +31,7 @@ const AccountCreation = ({ setAccountCreated }) => {
           : { owner_id: signedAccountId, name };
 
         // call the smart contract method
-        const result = await wallet.callMethod(method, args);
+        const result = await wallet.callMethod(contractId, method, args);
 
         if (result.success) {
           // update accountCreated state in parent component
