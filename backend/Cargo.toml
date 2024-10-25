@@ -3,7 +3,7 @@ name = "backend_car_sharing"
 description = "cargo-near-new-project-description"
 version = "0.1.0"
 edition = "2021"
-#repository = "https://github.com/partagexyz/car-sharing"
+repository = "https://github.com/partagexyz/car-sharing"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
