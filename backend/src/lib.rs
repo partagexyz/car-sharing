@@ -57,7 +57,7 @@ impl CarSharing {
         Self::default() //initialized the contract with all fields in structure set to default values
     }
     #[handle_result]
-    pub fn create_owner_account(&mut self, owner_id: String, name: String) -> Result<(), Error> {
+    pub fn create_owner_account(&mut self, owner_id: String, name: String) -> Result<String, Error> {
         if self.owners.contains_key(&owner_id) {
             return Err(Error::OwnerAlreadyExists);
         }
@@ -72,16 +72,11 @@ impl CarSharing {
         );
         self.owners_accounts.push(account_id);
         log!("Event::OwnerCreated, owner_id: {}", owner_id);
-        Ok(())
+        Ok(format!("Owner account '{}' created successfully", owner_id))
     }
 
     #[handle_result]
-    pub fn create_user_account(
-        &mut self,
-        user_id: String,
-        name: String,
-        driving_license: String,
-    ) -> Result<(), Error> {
+    pub fn create_user_account(&mut self, user_id: String, name: String, driving_license: String) -> Result<String, Error> {
         if self.users.contains_key(&user_id) {
             return Err(Error::UserAlreadyExists);
         }
@@ -98,16 +93,11 @@ impl CarSharing {
         );
         self.users_accounts.push(account_id);
         log!("Event::UserCreated, user_id: {}", user_id);
-        Ok(())
+        Ok(format!("User account '{}' created successfully", user_id))
     }
 
     #[handle_result]
-    pub fn add_car(
-        &mut self,
-        car_id: String,
-        owner_id: String,
-        hourly_rate: u128,
-    ) -> Result<(), Error> {
+    pub fn add_car(&mut self, car_id: String, owner_id: String, hourly_rate: u128) -> Result<String, Error> {
         // Ensure caller has permission to add a car
         let caller: AccountId = predecessor_account_id();
         if !self.is_owner(&caller) {
@@ -133,12 +123,12 @@ impl CarSharing {
             },
         );
         log!("Event: CarAdded, car_id: {}, owner: {}", car_id.clone(), owner_id.clone());
-        Ok(())
+        Ok(format!("Car '{}' added successfully with owner '{}'", car_id, owner_id))
     }
 
     // delete_car allows owners to remove a car from the system
     #[handle_result]
-    pub fn delete_car(&mut self, car_id: String) -> Result<(), Error> {
+    pub fn delete_car(&mut self, car_id: String) -> Result<String, Error> {
         // get the caller account id
         let caller = predecessor_account_id().to_string();
         // retrieve the car to check its ownership
@@ -150,20 +140,13 @@ impl CarSharing {
         // remove the car from the mapping
         self.cars.remove(&car_id);
         log!("Event: Car deleted, car_id: {}", car_id);
-        Ok(())
+        Ok(format!("Car {} deleted successfully.", car_id))
     }
 
     // book_car allows users to book a car in advance with a deposit
     #[payable]
     #[handle_result]
-    pub fn book_car(
-        &mut self,
-        car_id: String,
-        user_id: String,
-        start_time: u64,
-        end_time: u64,
-        deposit: NearToken,
-    ) -> Result<(), Error> {
+    pub fn book_car(&mut self, car_id: String, user_id: String, start_time: u64, end_time: u64, deposit: NearToken) -> Result<String, Error> {
         // Convert user_id to AccountId
         let user_account_id: AccountId = user_id.parse().map_err(|_| Error::InvalidAccountId)?;
         // Ensure the driver is valid, the car exists, and is available
@@ -213,19 +196,19 @@ impl CarSharing {
         );
         // Emit event
         log!("Event: CarBooked, car_id: {}, user: {}, start_time: {}, end_time: {}, deposit: {}", car_id, user_id.clone(), start_time, end_time, deposit_amount.as_yoctonear());
-        Ok(())
+        Ok(format!("Car '{}' booked successfully from {} to {} by '{}'", car_id, start_time, end_time, user_id))
     }
 
     #[payable]
     #[handle_result]
-    pub fn cancel_booking(&mut self, booking_id: String) -> Result<(), Error> {
+    pub fn cancel_booking(&mut self, booking_id: String) -> Result<String, Error> {
         if let Some(booking) = self.bookings.remove(&booking_id) {
             let _car_id: String = booking.car_id.clone();
             let user_id: String = booking.user_id.clone();
             let deposit: u128 = booking.deposit;
             // No refund is processed: the 10% deposit is retained
             log!("Event: BookingCancelled, booking_id: {}, user: {}, deposit_retained: {}", booking_id.clone(), user_id.clone(), deposit);
-            Ok(())
+            Ok(format!("Booking {} cancelled successfully.", booking_id))
         } else {
             Err(Error::BookingNotFound)
         }
@@ -234,12 +217,7 @@ impl CarSharing {
     // rent_car allows users to rent a car immediately with payment
     #[payable]
     #[handle_result]
-    pub fn rent_car(
-        &mut self,
-        car_id: String,
-        user_id: String,
-        duration: u32,
-    ) -> Result<(), Error> {
+    pub fn rent_car(&mut self, car_id: String, user_id: String, duration: u32) -> Result<String, Error> {
         // Convert user_id to AccountId
         let user_account_id: AccountId = user_id.parse().map_err(|_| Error::InvalidAccountId)?;
         // Ensure the caller has a valid user account w/ driving license
@@ -249,6 +227,7 @@ impl CarSharing {
         // Calculate end_time based on current time and duration
         let start_time: u64 = block_timestamp(); //check that block_timestamp returns values in nanoseconds
         let end_time: u64 = start_time + (duration as u64 * 3600000000000); // convert duration in hours to nanoseconds
+        
         // Ensure the car exists and is available
         let car: &mut Car = self.cars.get_mut(&car_id).ok_or(Error::CarNotFound)?;
         // Ensure required payment is attached
@@ -274,12 +253,12 @@ impl CarSharing {
         )?;
         // Emit the rent event
         log!("Event: CarRented, car_id: {}, user: {}, duration: {}", car_id.clone(), user_id.clone(), duration);
-        Ok(())
+        Ok(format!("Car '{}' rented successfully for {} hours by '{}'", car_id, duration, user_id))
     }
 
     #[payable]
     #[handle_result]
-    pub fn return_car(&mut self, car_id: String) -> Result<(), Error> {
+    pub fn return_car(&mut self, car_id: String) -> Result<String, Error> {
         let now: u64 = block_timestamp();
         {
             let car: &mut Car = self.cars.get_mut(&car_id).ok_or(Error::CarNotFound)?;
@@ -298,10 +277,10 @@ impl CarSharing {
             log!("Event: BookingCancelled, booking_id: {}, user: {}, deposit_retained: {}", booking_id.clone(), user_id.clone(), deposit);
         }
         log!("Event: CarReturned, car_id: {}", car_id.clone());
-        Ok(())
+        Ok(format!("Car '{}' returned successfully", car_id))
     }
 
-    // Helper functions
+    // read-only functions
     pub fn is_owner(&self, account_id: &AccountId) -> bool {
         self.owners_accounts.contains(account_id)
     }
@@ -310,27 +289,54 @@ impl CarSharing {
         self.users_accounts.contains(account_id)
     }
 
-    // read-only functions
-    pub fn list_owner_cars(&self, owner_id: String) -> Vec<Car> {
-        self.cars
+    #[handle_result]
+    pub fn is_available(&self, car_id: &String) -> Result<bool, String> {
+        match self.cars.get(car_id) {
+            Some(car) => Ok(car.available),
+            None => Err("Car not found".to_string()),
+        }
+    }
+
+    #[handle_result]
+    pub fn list_owner_cars(&self, owner_id: String) -> Result<Vec<Car>, String> {
+        let owner_cars: Vec<Car> = self.cars
             .values()
             .cloned()
             .filter(|car| car.owner_id == owner_id)
-            .collect()
+            .collect();
+
+        match owner_cars.is_empty() {
+            true => Err("No cars found for this owner".to_string()),
+            false => Ok(owner_cars),
+        }
     }
-    pub fn list_available_cars(&self) -> Vec<Car> {
-        self.cars
+
+    #[handle_result]
+    pub fn list_available_cars(&self) -> Result<Vec<Car>, String> {
+        let available_cars: Vec<Car> = self.cars
             .values()
             .cloned()
             .filter(|car| car.available)
-            .collect()
+            .collect();
+        
+        match available_cars.is_empty() {
+            true => Err("No cars available".to_string()),
+            false => Ok(available_cars),
+        }
     }
-    pub fn list_user_bookings(&self, user_id: String) -> Vec<Booking> {
-        self.bookings
+
+    #[handle_result]
+    pub fn list_user_bookings(&self, user_id: String) -> Result<Vec<Booking>, String> {
+        let user_bookings: Vec<Booking> = self.bookings
             .values()
             .filter(|b| b.user_id == user_id)
             .cloned()
-            .collect()
+            .collect();
+
+        match user_bookings.is_empty() {
+            true => Err("No bookings found for this user".to_string()),
+            false => Ok(user_bookings),
+        }
     }
 }
 
