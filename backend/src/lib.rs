@@ -32,11 +32,11 @@ pub struct Car {
 #[derive(Default, Serialize, Deserialize, BorshDeserialize, BorshSerialize, Clone, JsonSchema)]
 pub struct Booking {
     pub booking_id: String,
-    car_id: String,
-    user_id: String,
-    start_time: u64,
-    end_time: u64,
-    deposit: u128,
+    pub car_id: String,
+    pub user_id: String,
+    pub start_time: u64,
+    pub end_time: u64,
+    pub deposit: u128,
 }
 
 #[near_bindgen]
@@ -159,6 +159,7 @@ impl CarSharing {
         if start_time >= end_time {
             return Err(Error::InvalidBookingTime);
         }
+        // ensure the car exists and is available
         let car = self.cars.get(&car_id).ok_or(Error::CarNotFound)?;
         if !car.available {
             return Err(Error::CarNotAvailable);
@@ -220,37 +221,52 @@ impl CarSharing {
     pub fn rent_car(&mut self, car_id: String, user_id: String, duration: u32) -> Result<String, Error> {
         // Convert user_id to AccountId
         let user_account_id: AccountId = user_id.parse().map_err(|_| Error::InvalidAccountId)?;
+        
         // Ensure the caller has a valid user account w/ driving license
         if !self.is_user(&user_account_id) {
             return Err(Error::InvalidUser);
         }
         // Calculate end_time based on current time and duration
-        let start_time: u64 = block_timestamp(); //check that block_timestamp returns values in nanoseconds
-        let end_time: u64 = start_time + (duration as u64 * 3600000000000); // convert duration in hours to nanoseconds
+        let start_time: u64 = block_timestamp(); //current time in nanoseconds
+        let end_time: u64 = start_time + (duration as u64 * 3600000000000); // convert duration into nanoseconds
         
-        // Ensure the car exists and is available
-        let car: &mut Car = self.cars.get_mut(&car_id).ok_or(Error::CarNotFound)?;
+        // Ensure the car exists and is available on the requested period
+        let car = self.cars.get(&car_id).ok_or(Error::CarNotFound)?;
+        if self.bookings.values().any(|booking| {
+            booking.car_id == car_id
+                && ((start_time >= booking.start_time && start_time < booking.end_time)
+                || (end_time > booking.start_time && end_time <= booking.end_time)
+                || (start_time <= booking.start_time && end_time >= booking.end_time))
+        }) {
+            return Err(Error::CarNotAvailable);
+        }
+
         // Ensure required payment is attached
-        let required_deposit: NearToken = NearToken::from_yoctonear((duration as u128) * car.hourly_rate);
-        let attached_deposit: NearToken = attached_deposit().into();
-        if attached_deposit < required_deposit {
+        let required_payment: NearToken = NearToken::from_yoctonear((duration as u128) * car.hourly_rate);
+        let attached_payment: NearToken = attached_deposit().into();
+        if attached_payment < required_payment {
             return Err(Error::InsufficientPayment);
         }
 
-        // Check if the car is available
-        if !car.available {
-            return Err(Error::CarNotAvailable);
-        }
+        // Generate a unique booking ID and create the booking
+        let booking_id: String = format!("{}-{}-{}", car_id, user_id, start_time);
+        self.bookings.insert(
+            booking_id.clone(),
+            Booking {
+                booking_id: booking_id.clone(),
+                car_id: car_id.clone(),
+                user_id: user_id.clone(),
+                start_time,
+                end_time,
+                deposit: attached_payment.as_yoctonear(),
+            },
+        );
+        
         // Mark car as unavailable
-        car.available = false;
+        if let Some(car) = self.cars.get_mut(&car_id) {
+            car.available = false;
+        }
 
-        self.book_car(
-            car_id.clone(),
-            user_id.clone(),
-            start_time,
-            end_time,
-            attached_deposit.clone(),
-        )?;
         // Emit the rent event
         log!("Event: CarRented, car_id: {}, user: {}, duration: {}", car_id.clone(), user_id.clone(), duration);
         Ok(format!("Car '{}' rented successfully for {} hours by '{}'", car_id, duration, user_id))
@@ -287,6 +303,16 @@ impl CarSharing {
 
     pub fn is_user(&self, account_id: &AccountId) -> bool {
         self.users_accounts.contains(account_id)
+    }
+
+    #[handle_result]
+    pub fn get_booking_id(&self, car_id: String, user_id: String, start_time: u64) -> Result<String, String> {
+        for booking in self.bookings.values() {
+            if booking.car_id == car_id && booking.user_id == user_id && booking.start_time == start_time {
+                return Ok(booking.booking_id.clone());
+            }
+        }
+        Err("No booking found for the specified car, user, and start time".to_string())
     }
 
     #[handle_result]

@@ -1,6 +1,7 @@
 use car_sharing::CarSharing;
 use near_sdk::{testing_env, AccountId, Gas};
 use near_sdk::test_utils::{accounts, VMContextBuilder};
+use near_sdk::env::block_timestamp;
 use near_token::NearToken;
 
 // Mocking the VM context for testing purposes
@@ -154,23 +155,35 @@ async fn test_cancel_booking() {
 #[tokio::test]
 async fn test_rent_car() {
     let mut contract = init_contract();
-    // create owner and user accounts
+    // Create owner and user accounts
     contract.create_owner_account("owner1".to_string(), "John Doe".to_string()).unwrap();
     contract.create_user_account("user1".to_string(), "Alice".to_string(), "DL-123456".to_string()).unwrap();
-    // add a car associated with owner1
-    contract.add_car("car1".to_string(), "owner1".to_string(), 2000000000000000000000).unwrap();
-    // set the testing environment for user1
+    // Add a car associated with owner1
+    contract.add_car("car1".to_string(), "owner1".to_string(), 2_000_000_000_000_000_000_000_000).unwrap(); // Set hourly rate for testing
+    // Set the testing environment for user1, with attached deposit to cover rent
     testing_env!(get_context("user1".parse().unwrap())
         .prepaid_gas(Gas::from_gas(10u64.pow(12)))
-        .attached_deposit(NearToken::from_yoctonear(1_000_000_000_000_000_000_000_000u128))
+        .attached_deposit(NearToken::from_yoctonear(2_000_000_000_000_000_000_000_000u128)) // Deposit equals 1-hour rent
         .build());
-    // attempt to rent the car for 1 hour
+    // Attempt to rent the car for 1 hour
     let result = contract.rent_car("car1".to_string(), "user1".to_string(), 1); // Rent for 1 hour
+    // Verify the car rental result is successful
     assert!(result.is_ok(), "Renting car failed");
-    // verify that the car is no longer available
+    // Verify that the car is no longer available after renting
     let car = contract.cars.get("car1").unwrap();
     assert!(!car.available, "Car should not be available after renting");
+    // Check if a booking record was created with the correct details
+    let booking_id = format!("{}-{}-{}", "car1", "user1", block_timestamp());
+    let booking = contract.bookings.get(&booking_id);
+    assert!(booking.is_some(), "Booking record was not created");
+
+    if let Some(booking) = booking {
+        assert_eq!(booking.car_id, "car1".to_string(), "Car ID mismatch in booking record");
+        assert_eq!(booking.user_id, "user1".to_string(), "User ID mismatch in booking record");
+        assert_eq!(booking.deposit, 2_000_000_000_000_000_000_000_000, "Deposit mismatch in booking record");
+    }
 }
+
 
 #[tokio::test]
 async fn test_return_car() {
@@ -215,7 +228,7 @@ async fn test_list_owner_cars() {
     for i in 1..=3 {
         contract.add_car(format!("car{}", i), "owner1".to_string(), 2000000000000000000000).unwrap();
     }
-    let cars = contract.list_owner_cars("owner1".to_string());
+    let cars = contract.list_owner_cars("owner1".to_string()).unwrap();
     assert_eq!(cars.len(), 3, "Owner should have 3 cars");
 }
 
@@ -238,7 +251,7 @@ async fn test_list_available_cars() {
         near_sdk::NearToken::from_yoctonear(100_000_000_000_000_000_000), // 0.1 NEAR deposit
     ).unwrap();
     
-    let available_cars = contract.list_available_cars();
+    let available_cars = contract.list_available_cars().unwrap();
     assert_eq!(available_cars.len(), 1, "Only one car should be available");
     assert_eq!(available_cars[0].car_id, "car1", "The available car should be car1");
 }
@@ -268,9 +281,9 @@ async fn test_list_user_bookings() {
         near_sdk::NearToken::from_yoctonear(100_000_000_000_000_000_000), // 0.1 NEAR deposit
     ).unwrap();
     
-    let user1_bookings = contract.list_user_bookings("user1".to_string());
+    let user1_bookings = contract.list_user_bookings("user1".to_string()).unwrap();
     assert_eq!(user1_bookings.len(), 1, "User1 should have 1 booking");
     
-    let user2_bookings = contract.list_user_bookings("user2".to_string());
+    let user2_bookings = contract.list_user_bookings("user2".to_string()).unwrap();
     assert_eq!(user2_bookings.len(), 1, "User2 should have 1 booking");
 }
