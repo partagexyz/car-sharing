@@ -1,7 +1,7 @@
 // this component is responsible for displaying user specific functionality
 import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { NearContext } from '@/utils/near';
-import { Cards } from '@/components/Cards';
+import { Cards } from './Cards';
 
 const UserProfile = ({ user }) => {
     const { wallet, signedAccountId } = useContext(NearContext);
