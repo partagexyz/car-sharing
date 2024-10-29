@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import '@/styles/globals.css';
 import { Navigation } from '@/components/navigation';
-import { Wallet, NearContext } from '@/wallets/near';
+import { Wallet, NearContext } from '@/utils/near';
 import { NetworkId } from '@/config';
 import AccountCreation from '@/components/AccountCreation';
 import UserProfile from '@/components/UserProfile';

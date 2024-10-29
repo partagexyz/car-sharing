@@ -1,32 +1,29 @@
-import Link from 'next/link';
-
+import React from 'react';
 import styles from '@/styles/app.module.css';
 
-export const Cards = () => {
+export const Cards = ({ cars, type, onDelete, onCancel }) => {
   return (
     <div className={styles.grid}>
-      <Link
-        href="https://docs.near.org/build/web3-apps/quickstart"
-        className={styles.card}
-        target='_blank'
-        rel="noopener noreferrer"
-      >
-        <h2>
-          Near Docs <span>-&gt;</span>
-        </h2>
-        <p>Learn how this application works, and what you can build on Near.</p>
-      </Link>
-
-      <Link
-        href="/hello-near"
-        className={styles.card}
-        rel="noopener noreferrer"
-      >
-        <h2>
-          Near Integration <span>-&gt;</span>
-        </h2>
-        <p>Discover how simple it is to interact with a Near smart contract.</p>
-      </Link>
+      {cars.map((car, index) => (
+        <div key={index} className={styles.card}>
+          {type === 'car' ? (
+            <>
+              <strong>Car ID:</strong> {car.car_id}<br />
+              <strong>Hourly Rate:</strong> {car.hourly_rate} yoctoNEAR<br />
+              <strong>Available:</strong> {car.available ? 'Yes' : 'No'}
+              {onDelete && <button onClick={() => onDelete(item.car_id)}>Delete Car</button>}
+            </>
+          ) : type === 'booking' ? (
+            <>
+              <strong>Booking ID:</strong> {car.id}<br />
+              <strong>Car ID:</strong> {car.car_id}<br />
+              <strong>Start Time:</strong> {new Date(booking.start_time / 1000000)}<br />
+              <strong>End Time:</strong> {new Date(booking.end_time / 1000000)}
+              {onCancel && <button onClick={() => onCancel(item.booking_id)}>Cancel Booking</button>}
+            </>
+          ) : null}
+        </div>
+      ))}
     </div>
   );
 };
