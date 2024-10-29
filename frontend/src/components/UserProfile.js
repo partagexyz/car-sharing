@@ -1,50 +1,13 @@
 // this component is responsible for displaying user specific functionality
-import React, { useState, useContext, useEffect, useCallback } from 'react';
+import React, { useState, useContext } from 'react';
 import { NearContext } from '@/utils/near';
 import { Cards } from './Cards';
 
-const UserProfile = ({ user }) => {
-    const { wallet, signedAccountId } = useContext(NearContext);
-    const [userData, setUserData] = useState(user);
+const UserProfile = () => {
+    const { user, wallet, signedAccountId } = useContext(NearContext);
 
-    // Function to fetch user's profile data based on role
-    useEffect(() => {
-        if (userData && (userData.cars === undefined && userData.bookings === undefined)) {
-            if (userData.role === 'owner') {
-                fetchOwnerCars();
-            } else if (userData.role === 'user') {
-                fetchUserBookings();
-            }
-        }
-    }, [userData, fetchOwnerCars, fetchUserBookings]);
-
-    // function to fetch cars for owners
-    const fetchOwnerCars = useCallback(async () => {
-        try {
-            const cars = await wallet.viewMethod({
-                contractId: 'partage.testnet',
-                method: 'list_owner_cars', 
-                args: { owner_id: signedAccountId }
-            });
-            setUserData(prev => ({ ...prev, cars }));
-        } catch (error) {
-            console.error('Error fetching owners cars:', error);
-        }
-    }, [wallet, signedAccountId]);
-
-    // function to fetch bookings for users
-    const fetchUserBookings = useCallback(async () => {
-        try {
-            const bookings = await wallet.viewMethod({
-                contractId: 'partage.testnet',
-                method: 'list_user_bookings', 
-                args: { user_id: signedAccountId }
-            });
-            setUserData(prev => ({ ...prev, bookings }));
-        } catch (error) {
-            console.error('Error fetching user bookings:', error);
-        }
-    }, [wallet, signedAccountId]);
+    // if user data hasn't been fetched yet, or there's no user
+    if (!user) return <div>Loading user profile...</div>;
 
     // function to add a car for owners
     const addCar = async (carId, hourlyRate) => {
@@ -55,7 +18,7 @@ const UserProfile = ({ user }) => {
                 hourly_rate: hourlyRate.toString() 
             });
             if (result.success) {
-                fetchOwnerCars();
+                console.log('Car added successfully');
             } else {
                 console.error('Error adding car:', result.error);
             }
@@ -69,7 +32,7 @@ const UserProfile = ({ user }) => {
         try {
             const result = await wallet.callMethod('delete_car', { car_id: carId });
             if (result.success) {
-                fetchOwnerCars();
+                console.log('Car deleted successfully');
             } else {
                 console.error('Error deleting car:', result.error);
             }
@@ -94,7 +57,7 @@ const UserProfile = ({ user }) => {
 
             if (result.success) {
                 // fetch bookings to update the list
-                fetchUserBookings();
+                console.log('Car booked successfully');
             } else {
                 console.error('Error booking car:', result.error);
             }
@@ -108,7 +71,7 @@ const UserProfile = ({ user }) => {
         try {
             const result = await wallet.callMethod('cancel_booking', { booking_id: bookingId });
             if (result.success) {
-                fetchUserBookings();
+                console.log('Booking canceled successfully');
             } else {
                 console.error('Error canceling booking:', result.error);
             }
@@ -117,21 +80,19 @@ const UserProfile = ({ user }) => {
         }
     };
 
-    if (!userData) return <div>Loading user profile...</div>;
-
     return (
         <div>
             <h1>Welcome, {signedAccountId}</h1>
-            {userData.role === 'owner' ? (
+            {user.role === 'owner' ? (
                 <div>
                     <h2>Your Cars</h2>
-                    {userData.cars && <Cards cars={userData.cars} type="car" onDelete={deleteCar} />}
+                    {user.cars && <Cards cars={user.cars} type="car" onDelete={deleteCar} />}
                     <button onClick={() => addCar("new-car-1", "1000000000000000000000000")}>Add Car</button>
                 </div>
             ) : (
                 <div>
                     <h2>Your Bookings</h2>
-                    {userData.bookings && <Cards cars={userData.bookings} type="booking" onCancel={cancelBooking} />}
+                    {user.bookings && <Cards cars={user.bookings} type="booking" onCancel={cancelBooking} />}
                     <button onClick={() => bookCar("some-car-id", "2023-10-23", "2023-10-24")}>Book Car</button>
                 </div>
             )}

@@ -16,67 +16,62 @@ export default function MyApp({ Component, pageProps }) {
   const router = useRouter();
 
   useEffect(() => {
-    wallet.startUp((accountId) => {
-      setSignedAccountId(accountId);
-      if (accountId) {
-        Promise.all([
-          wallet.viewMethod({
-            contractId: 'partage.testnet',
-            method: 'is_owner',
-            args: { account_id: accountId }
-          }),
-          wallet.viewMethod({
-            contractId: 'partage.testnet',
-            method: 'is_user',
-            args: { account_id: accountId }
-          })
-        ]).then(([isOwner, isUser]) => {
-          setAccountCreated(isOwner || isUser);
-          if (isOwner) {
-            fetchOwnerCars(accountId);
-          } else if (isUser) {
-            fetchUserBookings(accountId);
-          }
-        }).catch(() => {
-          setAccountCreated(false);
-          console.error('Failed to check account status');
-        });
-      } else {
-        setAccountCreated(false);
-      }
+    wallet.startUp(async (accountId) => {
+        setSignedAccountId(accountId);
+        if (accountId) {
+            try {
+                const isOwner = await wallet.viewMethod({
+                    contractId: 'partage.testnet',
+                    method: 'is_owner',
+                    args: { account_id: accountId }
+                });
+                
+                const isUser = await wallet.viewMethod({
+                    contractId: 'partage.testnet',
+                    method: 'is_user',
+                    args: { account_id: accountId }
+                });
+
+                if (isOwner || isUser) {
+                    const userRole = isOwner ? 'owner' : 'user';
+                    const userData = await (isOwner ? 
+                        fetchOwnerCars(accountId) : 
+                        fetchUserBookings(accountId)
+                    );
+
+                    setUser({ role: userRole, ...userData });
+                } else {
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+                setUser(null);
+            } finally {
+                setIsLoading(false);
+            }
+        } else {
+            setUser(null);
+            setIsLoading(false);
+        }
     });
-  }, []);
+}, []);
 
   const fetchOwnerCars = async (accountId) => {
-    try {
       const cars = await wallet.viewMethod({
         contractId: 'partage.testnet',
         method: 'list_owner_cars',
         args: { owner_id: accountId }
       });
-      setUser({ role: 'owner', cars });
-    } catch (error) {
-      console.error('Error fetching owner cars:', error);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
+      return { cars };
   };
 
   const fetchUserBookings = async (accountId) => {
-    try {
       const bookings = await wallet.viewMethod({
         contractId: 'partage.testnet',
         method: 'list_user_bookings',
         args: { user_id: accountId }
       });
-      setUser({ role: 'user', bookings });
-    } catch (error) {
-      console.error('Error fetching user bookings:', error);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
+      return { bookings };
   };
 
   const handleAccountCreated = () => {
