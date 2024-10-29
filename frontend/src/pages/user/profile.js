@@ -1,9 +1,10 @@
 import React from 'react';
 import UserProfile from '../../components/UserProfile';
+import { useContext } from 'react';
+import { NearContext } from '../../utils/near'
 
 const UserProfilePage = () => {
-    // fetch user data
-    const user = { id: 'user_id', name: 'User Name', role: 'user' };
+    const { user } = useContext(NearContext);
     return <UserProfile user={user} />;
 };
 

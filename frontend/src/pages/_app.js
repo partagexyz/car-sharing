@@ -4,7 +4,6 @@ import { Navigation } from '@/components/navigation';
 import { Wallet, NearContext } from '@/utils/near';
 import { NetworkId } from '@/config';
 import AccountCreation from '@/components/AccountCreation';
-import UserProfile from '@/components/UserProfile';
 import { useRouter } from 'next/router';
 
 const wallet = new Wallet({ networkId: NetworkId });
@@ -16,30 +15,65 @@ export default function MyApp({ Component, pageProps }) {
   const [accountCreated, setAccountCreated] = useState(null);
   const router = useRouter();
 
-  useEffect(() => { 
+  useEffect(() => {
     wallet.startUp((accountId) => {
       setSignedAccountId(accountId);
       if (accountId) {
-        fetchUserData(accountId);
-      wallet.viewMethod({
-        contractId: 'your-contract-id',
-        method: 'is_account_created',
-        args: { account_id: accountId }
-      }).then((exists) => setAccountCreated(exists))
-        .catch(() => setAccountCreated(false));
-    } else {
-      setAccountCreated(false);
-    }
+        Promise.all([
+          wallet.viewMethod({
+            contractId: 'partage.testnet',
+            method: 'is_owner',
+            args: { account_id: accountId }
+          }),
+          wallet.viewMethod({
+            contractId: 'partage.testnet',
+            method: 'is_user',
+            args: { account_id: accountId }
+          })
+        ]).then(([isOwner, isUser]) => {
+          setAccountCreated(isOwner || isUser);
+          if (isOwner) {
+            fetchOwnerCars(accountId);
+          } else if (isUser) {
+            fetchUserBookings(accountId);
+          }
+        }).catch(() => {
+          setAccountCreated(false);
+          console.error('Failed to check account status');
+        });
+      } else {
+        setAccountCreated(false);
+      }
     });
   }, []);
 
-  const fetchUserData = async (accountId) => {
+  const fetchOwnerCars = async (accountId) => {
     try {
-      const contract = await wallet.getContract();
-      const userData = await contract.getUser(accountId);
-      setUser(userData);
+      const cars = await wallet.viewMethod({
+        contractId: 'partage.testnet',
+        method: 'list_owner_cars',
+        args: { owner_id: accountId }
+      });
+      setUser({ role: 'owner', cars });
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error('Error fetching owner cars:', error);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchUserBookings = async (accountId) => {
+    try {
+      const bookings = await wallet.viewMethod({
+        contractId: 'partage.testnet',
+        method: 'list_user_bookings',
+        args: { user_id: accountId }
+      });
+      setUser({ role: 'user', bookings });
+    } catch (error) {
+      console.error('Error fetching user bookings:', error);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -63,9 +97,11 @@ export default function MyApp({ Component, pageProps }) {
   }
 
   return (
-    <NearContext.Provider value={{ wallet, signedAccountId, nearContext }}>
+    <NearContext.Provider value={{ wallet, signedAccountId, nearContext, user }}>
       <Navigation />
-      {!signedAccountId ? (
+      { isLoading ? (
+        <div>Loading...</div>
+      ) : !signedAccountId ? (
         <div>Please sign in to continue</div>
       ) : accountCreated === null ? (
         <div>Loading...</div>
@@ -75,7 +111,8 @@ export default function MyApp({ Component, pageProps }) {
           onAccountCreated={handleAccountCreated}
         />
       ) : (
-        <UserProfile user={{ id: signedAccountId, role: 'user' }} />
+        // return null for the user to be redirected to the user profile
+        null
       )}
     </NearContext.Provider>
   );
