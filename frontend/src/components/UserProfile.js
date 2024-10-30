@@ -1,14 +1,20 @@
 // this component is responsible for displaying user specific functionality
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { NearContext } from '@/utils/near';
 import { Cards } from './Cards';
 
 const UserProfile = () => {
     const { user, wallet, signedAccountId } = useContext(NearContext);
-    console.log("User data in UserProfile:", user);
+    
+    useEffect(() => {
+        console.log("User in context:", user);
+        console.log("Wallet in context:", wallet);
+        console.log("Signed Account ID:", signedAccountId);
+    }, [user, wallet, signedAccountId]);
 
     // if user data hasn't been fetched yet, or there's no user
     if (!user || Object.keys(user).length === 0) {
+        console.log("No user data available.");
         return <div>No user data available.</div>;
     }
 
@@ -86,6 +92,7 @@ const UserProfile = () => {
     return (
         <div>
             <h1>Welcome, {signedAccountId}</h1>
+            <p>Role: {user.role}</p>
             {user.role === 'owner' ? (
                 <div>
                     <h2>Your Cars</h2>

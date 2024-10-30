@@ -74,28 +74,29 @@ export default function MyApp({ Component, pageProps }) {
         setIsLoading(false);
       }
     });
-  }, [fetchOwnerCars, fetchUserBookings, wallet]);
+  }, [fetchOwnerCars, fetchUserBookings]);
 
   useEffect(() => {
-    if (redirectToProfile) {
-      console.log("Redirecting to /user/profile");
-      router.push('/user/profile');
+    if (!isLoading && redirectToProfile) {
+      console.log("Redirecting to /profile");
+      router.push('/profile');
       setRedirectToProfile(false);
     }
-  }, [redirectToProfile, router]);
+  }, [isLoading, redirectToProfile, router]);
 
   const handleAccountCreated = () => {
     console.log("Account created!");
     setAccountCreated(true);
-    console.log("Redirecting to /user/profile");
-    router.push('/user/profile');
+    console.log("Redirecting to /profile");
+    router.push('/profile');
   };
 
   const nearContext = useMemo(() => ({
     wallet,
     signedAccountId,
-    accountCreated
-  }), [signedAccountId, accountCreated]);
+    accountCreated,
+    user
+  }), [signedAccountId, accountCreated, user]);
 
   return (
     <NearContext.Provider value={{ wallet, signedAccountId, nearContext, user }}>
