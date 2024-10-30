@@ -38,7 +38,7 @@ const AccountCreation = ({ setAccountCreated }) => {
         // if account exists, redirect to user profile
         if (is_owner || is_user) {
           setMessage("Account already exists.");
-          setTimeout(() => router.push('/userprofile'), 1000);
+          setTimeout(() => router.push('/user/profile'), 1000);
           return;
         }
 
@@ -58,7 +58,7 @@ const AccountCreation = ({ setAccountCreated }) => {
           setAccountCreated(true);
           setMessage("Account created!");
           // Navigate to UserProfile after account creation
-          setTimeout(() => router.push('/userprofile'), 1000);
+          setTimeout(() => router.push('/user/profile'), 1000);
         } else {
           throw new Error(result.error);
         }

@@ -1,13 +1,16 @@
 // this component is responsible for displaying user specific functionality
-import React, { useState, useContext } from 'react';
+import React, { useContext } from 'react';
 import { NearContext } from '@/utils/near';
 import { Cards } from './Cards';
 
 const UserProfile = () => {
     const { user, wallet, signedAccountId } = useContext(NearContext);
+    console.log("User data in UserProfile:", user);
 
     // if user data hasn't been fetched yet, or there's no user
-    if (!user) return <div>Loading user profile...</div>;
+    if (!user || Object.keys(user).length === 0) {
+        return <div>No user data available.</div>;
+    }
 
     // function to add a car for owners
     const addCar = async (carId, hourlyRate) => {
@@ -86,13 +89,21 @@ const UserProfile = () => {
             {user.role === 'owner' ? (
                 <div>
                     <h2>Your Cars</h2>
-                    {user.cars && <Cards cars={user.cars} type="car" onDelete={deleteCar} />}
+                    {user.cars && user.cars.length > 0 ? (
+                        <Cards cars={user.cars} type="car" onDelete={deleteCar} />
+                    ) : (
+                        <p>You do not have any cars listed yet.</p>
+                    )}
                     <button onClick={() => addCar("new-car-1", "1000000000000000000000000")}>Add Car</button>
                 </div>
             ) : (
                 <div>
                     <h2>Your Bookings</h2>
-                    {user.bookings && <Cards cars={user.bookings} type="booking" onCancel={cancelBooking} />}
+                    {user.bookings && user.bookings.length > 0 ? (
+                        <Cards cars={user.bookings} type="booking" onCancel={cancelBooking} />
+                    ) : (
+                        <p>You do not have any bookings yet.</p>
+                    )}
                     <button onClick={() => bookCar("some-car-id", "2023-10-23", "2023-10-24")}>Book Car</button>
                 </div>
             )}

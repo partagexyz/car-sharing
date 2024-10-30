@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import '@/styles/globals.css';
 import { Navigation } from '@/components/navigation';
 import { Wallet, NearContext } from '@/utils/near';
@@ -13,71 +13,82 @@ export default function MyApp({ Component, pageProps }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [accountCreated, setAccountCreated] = useState(null);
+  const [redirectToProfile, setRedirectToProfile] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    wallet.startUp(async (accountId) => {
-        setSignedAccountId(accountId);
-        if (accountId) {
-            try {
-                const isOwner = await wallet.viewMethod({
-                    contractId: 'partage.testnet',
-                    method: 'is_owner',
-                    args: { account_id: accountId }
-                });
-                
-                const isUser = await wallet.viewMethod({
-                    contractId: 'partage.testnet',
-                    method: 'is_user',
-                    args: { account_id: accountId }
-                });
-
-                if (isOwner || isUser) {
-                    const userRole = isOwner ? 'owner' : 'user';
-                    const userData = await (isOwner ? 
-                        fetchOwnerCars(accountId) : 
-                        fetchUserBookings(accountId)
-                    );
-
-                    setUser({ role: userRole, ...userData });
-                } else {
-                    setUser(null);
-                }
-            } catch (error) {
-                console.error('Error fetching user data:', error);
-                setUser(null);
-            } finally {
-                setIsLoading(false);
-            }
-        } else {
-            setUser(null);
-            setIsLoading(false);
-        }
-    });
-}, []);
-
-  const fetchOwnerCars = async (accountId) => {
+  const fetchOwnerCars = useCallback(async (accountId) => {
       const cars = await wallet.viewMethod({
         contractId: 'partage.testnet',
         method: 'list_owner_cars',
         args: { owner_id: accountId }
       });
       return { cars };
-  };
+  }, []);
 
-  const fetchUserBookings = async (accountId) => {
+  const fetchUserBookings = useCallback(async (accountId) => {
       const bookings = await wallet.viewMethod({
         contractId: 'partage.testnet',
         method: 'list_user_bookings',
         args: { user_id: accountId }
       });
       return { bookings };
-  };
+  }, []);
+
+  useEffect(() => {
+    console.log("Starting wallet startup...");
+    wallet.startUp(async (accountId) => {
+      console.log("Account ID received:", accountId);
+      setSignedAccountId(accountId);
+      if (accountId) {
+        try {
+            const isOwner = await wallet.viewMethod({
+                contractId: 'partage.testnet',
+                method: 'is_owner',
+                args: { account_id: accountId }
+            });
+            const isUser = await wallet.viewMethod({
+                contractId: 'partage.testnet',
+                method: 'is_user',
+                args: { account_id: accountId }
+            });
+
+            if (isOwner || isUser) {
+                const userRole = isOwner ? 'owner' : 'user';
+                const userData = await (isOwner ? fetchOwnerCars(accountId) : fetchUserBookings(accountId));
+                console.log("Fetched user data:", userData);
+                setUser({ role: userRole, ...userData });
+                setRedirectToProfile(true);
+            } else {
+              setUser(null);
+            }
+          } catch (error) {
+            console.error('Error fetching user data:', error);
+            setUser(null);
+          } finally {
+            console.log("Finished loading user data");
+            setIsLoading(false);
+            console.log("isLoading set to false");
+          }
+      } else {
+        setUser(null);
+        setIsLoading(false);
+      }
+    });
+  }, [fetchOwnerCars, fetchUserBookings, wallet]);
+
+  useEffect(() => {
+    if (redirectToProfile) {
+      console.log("Redirecting to /user/profile");
+      router.push('/user/profile');
+      setRedirectToProfile(false);
+    }
+  }, [redirectToProfile, router]);
 
   const handleAccountCreated = () => {
+    console.log("Account created!");
     setAccountCreated(true);
-    // Navigate to User Profile after account creation
-    router.push('/userprofile');
+    console.log("Redirecting to /user/profile");
+    router.push('/user/profile');
   };
 
   const nearContext = useMemo(() => ({
@@ -85,11 +96,6 @@ export default function MyApp({ Component, pageProps }) {
     signedAccountId,
     accountCreated
   }), [signedAccountId, accountCreated]);
-
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <NearContext.Provider value={{ wallet, signedAccountId, nearContext, user }}>
@@ -106,8 +112,7 @@ export default function MyApp({ Component, pageProps }) {
           onAccountCreated={handleAccountCreated}
         />
       ) : (
-        // return null for the user to be redirected to the user profile
-        null
+        <Component {...pageProps} />
       )}
     </NearContext.Provider>
   );

@@ -1,18 +1,17 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, useContext } from 'react';
-
 import { NearContext } from '@/utils/near';
 import NearLogo from '/public/near-logo.svg';
 
 export const Navigation = () => {
   const { signedAccountId, wallet } = useContext(NearContext);
-  const [action, setAction] = useState(() => { });
-  const [label, setLabel] = useState('Loading...');
+  const [action, setAction] = useState(() => wallet.signIn);
+  const [label, setLabel] = useState('Login');
 
   useEffect(() => {
     if (!wallet) return;
-
+    
     if (signedAccountId) {
       setAction(() => wallet.signOut);
       setLabel(`Logout ${signedAccountId}`);

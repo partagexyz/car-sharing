@@ -11,7 +11,7 @@ export const Cards = ({ cars, type, onDelete, onCancel }) => {
               <strong>Car ID:</strong> {car.car_id}<br />
               <strong>Hourly Rate:</strong> {car.hourly_rate} yoctoNEAR<br />
               <strong>Available:</strong> {car.available ? 'Yes' : 'No'}
-              {onDelete && <button onClick={() => onDelete(item.car_id)}>Delete Car</button>}
+              {onDelete && <button onClick={() => onDelete(car.car_id)}>Delete Car</button>}
             </>
           ) : type === 'booking' ? (
             <>
@@ -19,7 +19,7 @@ export const Cards = ({ cars, type, onDelete, onCancel }) => {
               <strong>Car ID:</strong> {car.car_id}<br />
               <strong>Start Time:</strong> {new Date(booking.start_time / 1000000)}<br />
               <strong>End Time:</strong> {new Date(booking.end_time / 1000000)}
-              {onCancel && <button onClick={() => onCancel(item.booking_id)}>Cancel Booking</button>}
+              {onCancel && <button onClick={() => onCancel(car.booking_id)}>Cancel Booking</button>}
             </>
           ) : null}
         </div>
