@@ -25,7 +25,6 @@ container_build_command = ["cargo", "near", "build"]
 [dependencies]
 near-sdk = "5.4"
 near-token = "0.3.0"
-calimero-sdk = { git = "https://github.com/calimero-network/core" }
 borsh = "1.4.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0"

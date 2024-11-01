@@ -2,11 +2,11 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use near_sdk::env::{attached_deposit, block_timestamp, predecessor_account_id};
-use near_sdk::{AccountId};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::{near_bindgen};
+use near_sdk::env::{attached_deposit, block_timestamp, predecessor_account_id};
 use near_sdk::log;
+use near_sdk::near_bindgen;
+use near_sdk::AccountId;
 use near_sdk::FunctionError;
 use near_token::NearToken;
 
@@ -57,7 +57,11 @@ impl CarSharing {
         Self::default() //initialized the contract with all fields in structure set to default values
     }
     #[handle_result]
-    pub fn create_owner_account(&mut self, owner_id: String, name: String) -> Result<String, Error> {
+    pub fn create_owner_account(
+        &mut self,
+        owner_id: String,
+        name: String,
+    ) -> Result<String, Error> {
         if self.owners.contains_key(&owner_id) {
             return Err(Error::OwnerAlreadyExists);
         }
@@ -76,7 +80,12 @@ impl CarSharing {
     }
 
     #[handle_result]
-    pub fn create_user_account(&mut self, user_id: String, name: String, driving_license: String) -> Result<String, Error> {
+    pub fn create_user_account(
+        &mut self,
+        user_id: String,
+        name: String,
+        driving_license: String,
+    ) -> Result<String, Error> {
         if self.users.contains_key(&user_id) {
             return Err(Error::UserAlreadyExists);
         }
@@ -97,7 +106,12 @@ impl CarSharing {
     }
 
     #[handle_result]
-    pub fn add_car(&mut self, car_id: String, owner_id: String, hourly_rate: u128) -> Result<String, Error> {
+    pub fn add_car(
+        &mut self,
+        car_id: String,
+        owner_id: String,
+        hourly_rate: u128,
+    ) -> Result<String, Error> {
         // Ensure caller has permission to add a car
         let caller: AccountId = predecessor_account_id();
         if !self.is_owner(&caller) {
@@ -122,8 +136,15 @@ impl CarSharing {
                 hourly_rate,
             },
         );
-        log!("Event: CarAdded, car_id: {}, owner: {}", car_id.clone(), owner_id.clone());
-        Ok(format!("Car '{}' added successfully with owner '{}'", car_id, owner_id))
+        log!(
+            "Event: CarAdded, car_id: {}, owner: {}",
+            car_id.clone(),
+            owner_id.clone()
+        );
+        Ok(format!(
+            "Car '{}' added successfully with owner '{}'",
+            car_id, owner_id
+        ))
     }
 
     // delete_car allows owners to remove a car from the system
@@ -146,7 +167,14 @@ impl CarSharing {
     // book_car allows users to book a car in advance with a deposit
     #[payable]
     #[handle_result]
-    pub fn book_car(&mut self, car_id: String, user_id: String, start_time: u64, end_time: u64, deposit: NearToken) -> Result<String, Error> {
+    pub fn book_car(
+        &mut self,
+        car_id: String,
+        user_id: String,
+        start_time: u64,
+        end_time: u64,
+        deposit: NearToken,
+    ) -> Result<String, Error> {
         // Convert user_id to AccountId
         let user_account_id: AccountId = user_id.parse().map_err(|_| Error::InvalidAccountId)?;
         // Ensure the driver is valid, the car exists, and is available
@@ -160,7 +188,7 @@ impl CarSharing {
             return Err(Error::InvalidBookingTime);
         }
         // ensure the car exists and is available
-        let car = self.cars.get(&car_id).ok_or(Error::CarNotFound)?;
+        let car: &Car = self.cars.get(&car_id).ok_or(Error::CarNotFound)?;
         if !car.available {
             return Err(Error::CarNotAvailable);
         }
@@ -168,8 +196,8 @@ impl CarSharing {
         if self.bookings.values().any(|booking| {
             booking.car_id == car_id
                 && ((start_time >= booking.start_time && start_time < booking.end_time)
-                || (end_time > booking.start_time && end_time <= booking.end_time)
-                || (start_time <= booking.start_time && end_time >= booking.end_time))
+                    || (end_time > booking.start_time && end_time <= booking.end_time)
+                    || (start_time <= booking.start_time && end_time >= booking.end_time))
         }) {
             return Err(Error::CarNotAvailable);
         }
@@ -177,7 +205,7 @@ impl CarSharing {
         let rental_duration: u64 = (end_time - start_time) / 3600000000000; // Convert to hours
         let rental_fee: u128 = (rental_duration as u128) * car.hourly_rate;
         let deposit_amount: NearToken = NearToken::from_yoctonear((rental_fee / 10) * 9); // 10% of rental fee
-        // Check if enough deposit was attached
+                                                                                          // Check if enough deposit was attached
         if deposit < deposit_amount {
             return Err(Error::InsufficientDeposit);
         }
@@ -196,8 +224,18 @@ impl CarSharing {
             },
         );
         // Emit event
-        log!("Event: CarBooked, car_id: {}, user: {}, start_time: {}, end_time: {}, deposit: {}", car_id, user_id.clone(), start_time, end_time, deposit_amount.as_yoctonear());
-        Ok(format!("Car '{}' booked successfully from {} to {} by '{}'", car_id, start_time, end_time, user_id))
+        log!(
+            "Event: CarBooked, car_id: {}, user: {}, start_time: {}, end_time: {}, deposit: {}",
+            car_id,
+            user_id.clone(),
+            start_time,
+            end_time,
+            deposit_amount.as_yoctonear()
+        );
+        Ok(format!(
+            "Car '{}' booked successfully from {} to {} by '{}'",
+            car_id, start_time, end_time, user_id
+        ))
     }
 
     #[payable]
@@ -208,7 +246,12 @@ impl CarSharing {
             let user_id: String = booking.user_id.clone();
             let deposit: u128 = booking.deposit;
             // No refund is processed: the 10% deposit is retained
-            log!("Event: BookingCancelled, booking_id: {}, user: {}, deposit_retained: {}", booking_id.clone(), user_id.clone(), deposit);
+            log!(
+                "Event: BookingCancelled, booking_id: {}, user: {}, deposit_retained: {}",
+                booking_id.clone(),
+                user_id.clone(),
+                deposit
+            );
             Ok(format!("Booking {} cancelled successfully.", booking_id))
         } else {
             Err(Error::BookingNotFound)
@@ -218,10 +261,15 @@ impl CarSharing {
     // rent_car allows users to rent a car immediately with payment
     #[payable]
     #[handle_result]
-    pub fn rent_car(&mut self, car_id: String, user_id: String, duration: u32) -> Result<String, Error> {
+    pub fn rent_car(
+        &mut self,
+        car_id: String,
+        user_id: String,
+        duration: u32,
+    ) -> Result<String, Error> {
         // Convert user_id to AccountId
         let user_account_id: AccountId = user_id.parse().map_err(|_| Error::InvalidAccountId)?;
-        
+
         // Ensure the caller has a valid user account w/ driving license
         if !self.is_user(&user_account_id) {
             return Err(Error::InvalidUser);
@@ -229,20 +277,21 @@ impl CarSharing {
         // Calculate end_time based on current time and duration
         let start_time: u64 = block_timestamp(); //current time in nanoseconds
         let end_time: u64 = start_time + (duration as u64 * 3600000000000); // convert duration into nanoseconds
-        
+
         // Ensure the car exists and is available on the requested period
         let car = self.cars.get(&car_id).ok_or(Error::CarNotFound)?;
         if self.bookings.values().any(|booking| {
             booking.car_id == car_id
                 && ((start_time >= booking.start_time && start_time < booking.end_time)
-                || (end_time > booking.start_time && end_time <= booking.end_time)
-                || (start_time <= booking.start_time && end_time >= booking.end_time))
+                    || (end_time > booking.start_time && end_time <= booking.end_time)
+                    || (start_time <= booking.start_time && end_time >= booking.end_time))
         }) {
             return Err(Error::CarNotAvailable);
         }
 
         // Ensure required payment is attached
-        let required_payment: NearToken = NearToken::from_yoctonear((duration as u128) * car.hourly_rate);
+        let required_payment: NearToken =
+            NearToken::from_yoctonear((duration as u128) * car.hourly_rate);
         let attached_payment: NearToken = attached_deposit().into();
         if attached_payment < required_payment {
             return Err(Error::InsufficientPayment);
@@ -261,15 +310,23 @@ impl CarSharing {
                 deposit: attached_payment.as_yoctonear(),
             },
         );
-        
+
         // Mark car as unavailable
         if let Some(car) = self.cars.get_mut(&car_id) {
             car.available = false;
         }
 
         // Emit the rent event
-        log!("Event: CarRented, car_id: {}, user: {}, duration: {}", car_id.clone(), user_id.clone(), duration);
-        Ok(format!("Car '{}' rented successfully for {} hours by '{}'", car_id, duration, user_id))
+        log!(
+            "Event: CarRented, car_id: {}, user: {}, duration: {}",
+            car_id.clone(),
+            user_id.clone(),
+            duration
+        );
+        Ok(format!(
+            "Car '{}' rented successfully for {} hours by '{}'",
+            car_id, duration, user_id
+        ))
     }
 
     #[payable]
@@ -290,7 +347,12 @@ impl CarSharing {
             let user_id: String = booking.1.user_id.clone();
             let deposit: u128 = booking.1.deposit;
             self.bookings.remove(&booking_id);
-            log!("Event: BookingCancelled, booking_id: {}, user: {}, deposit_retained: {}", booking_id.clone(), user_id.clone(), deposit);
+            log!(
+                "Event: BookingCancelled, booking_id: {}, user: {}, deposit_retained: {}",
+                booking_id.clone(),
+                user_id.clone(),
+                deposit
+            );
         }
         log!("Event: CarReturned, car_id: {}", car_id.clone());
         Ok(format!("Car '{}' returned successfully", car_id))
@@ -306,9 +368,17 @@ impl CarSharing {
     }
 
     #[handle_result]
-    pub fn get_booking_id(&self, car_id: String, user_id: String, start_time: u64) -> Result<String, String> {
+    pub fn get_booking_id(
+        &self,
+        car_id: String,
+        user_id: String,
+        start_time: u64,
+    ) -> Result<String, String> {
         for booking in self.bookings.values() {
-            if booking.car_id == car_id && booking.user_id == user_id && booking.start_time == start_time {
+            if booking.car_id == car_id
+                && booking.user_id == user_id
+                && booking.start_time == start_time
+            {
                 return Ok(booking.booking_id.clone());
             }
         }
@@ -325,7 +395,8 @@ impl CarSharing {
 
     #[handle_result]
     pub fn list_owner_cars(&self, owner_id: String) -> Result<Vec<Car>, String> {
-        let owner_cars: Vec<Car> = self.cars
+        let owner_cars: Vec<Car> = self
+            .cars
             .values()
             .cloned()
             .filter(|car| car.owner_id == owner_id)
@@ -339,12 +410,13 @@ impl CarSharing {
 
     #[handle_result]
     pub fn list_available_cars(&self) -> Result<Vec<Car>, String> {
-        let available_cars: Vec<Car> = self.cars
+        let available_cars: Vec<Car> = self
+            .cars
             .values()
             .cloned()
             .filter(|car| car.available)
             .collect();
-        
+
         match available_cars.is_empty() {
             true => Err("No cars available".to_string()),
             false => Ok(available_cars),
@@ -353,7 +425,8 @@ impl CarSharing {
 
     #[handle_result]
     pub fn list_user_bookings(&self, user_id: String) -> Result<Vec<Booking>, String> {
-        let user_bookings: Vec<Booking> = self.bookings
+        let user_bookings: Vec<Booking> = self
+            .bookings
             .values()
             .filter(|b| b.user_id == user_id)
             .cloned()

@@ -29,3 +29,6 @@ yarn-error.log*
 
 # Ignore build artifacts from target folder in backend
 /backend/target/
+
+# Ignore rust lock files
+**/*.lock
